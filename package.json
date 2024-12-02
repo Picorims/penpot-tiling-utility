@@ -3,9 +3,8 @@
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
-		"dev": "vite build --watch && vite preview",
-		"build": "vite build",
-		"preview": "vite preview",
+		"build:dev": "vite build --mode dev && node ./scripts/post_build.js dev && vite preview --port 9744",
+		"build:prod": "vite build --mode production && node ./scripts/post_build.js production",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
