@@ -10,3 +10,10 @@ penpot.ui.open("Tiling Utility", "", {
     width: 500,
     height: 600,
 });
+
+penpot.ui.onMessage<string>((message) => {
+    console.log(message);
+    if (message === "ping") {
+        penpot.ui.sendMessage("pong");
+    }
+});
