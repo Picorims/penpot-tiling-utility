@@ -34,6 +34,7 @@
 		"vitest": "^2.0.4"
 	},
 	"dependencies": {
-		"@penpot/plugin-styles": "^1.0.0"
+		"@penpot/plugin-styles": "^1.0.0",
+		"@penpot/plugin-types": "^1.0.0"
 	}
 }
