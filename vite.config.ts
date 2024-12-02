@@ -6,5 +6,18 @@ export default defineConfig({
 
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}']
-	}
+	},
+
+	build: {
+		rollupOptions: {
+			input: {
+				plugin: 'src/plugin.ts',
+				index: 'src/app.html'
+			},
+			output: {
+				entryFileNames: "[name].js",
+			}
+		}
+	},
+
 });
