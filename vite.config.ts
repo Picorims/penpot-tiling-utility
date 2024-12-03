@@ -11,8 +11,8 @@ export default defineConfig({
 	build: {
 		rollupOptions: {
 			input: {
-				plugin: 'src/plugin.ts', // makes the corresponding chunk available.
-			},
+				plugin: 'src/plugin.ts' // makes the corresponding chunk available.
+			}
 		}
-	},
+	}
 });

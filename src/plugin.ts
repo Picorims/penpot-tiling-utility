@@ -6,14 +6,14 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-penpot.ui.open("Tiling Utility", "", {
-    width: 500,
-    height: 600,
+penpot.ui.open('Tiling Utility', '', {
+	width: 500,
+	height: 600
 });
 
 penpot.ui.onMessage<string>((message) => {
-    console.log(message);
-    if (message === "ping") {
-        penpot.ui.sendMessage("pong");
-    }
+	console.log(message);
+	if (message === 'ping') {
+		penpot.ui.sendMessage('pong');
+	}
 });

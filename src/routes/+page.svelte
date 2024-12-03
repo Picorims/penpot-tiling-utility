@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { onMount } from "svelte";
+	import { onMount } from 'svelte';
 
-    /*
+	/*
       Copyright (c) 2024 Charly Schmidt aka Picorims<picorims.contact@gmail.com>,
     
       This Source Code Form is subject to the terms of the Mozilla Public
@@ -9,18 +9,18 @@
       file, You can obtain one at http://mozilla.org/MPL/2.0/.
     */
 
-   function sendPing() {
-    parent.postMessage("ping", "*");
-   }
+	function sendPing() {
+		parent.postMessage('ping', '*');
+	}
 
-   function messageHandler(event: MessageEvent) {
-    if (event.data === "pong") {
-      console.log("pong received");
-    }
-   }
-   onMount(() => {
-    window.addEventListener("message", messageHandler);
-   });
+	function messageHandler(event: MessageEvent) {
+		if (event.data === 'pong') {
+			console.log('pong received');
+		}
+	}
+	onMount(() => {
+		window.addEventListener('message', messageHandler);
+	});
 </script>
 
 <h1>Welcome to SvelteKit</h1>
