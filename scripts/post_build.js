@@ -32,8 +32,9 @@ if (process.argv.length !== 3) {
   let foundPluginCode = false;
   for (const file of immutableDirFiles) {
     if (regex.test(file)) {
-      const jsCode = "export * from './_app/immutable/" + file + "';\n";
-      fs.writeFileSync(path.resolve(basePath + '/plugin.js'), jsCode);
+      const from = path.resolve(basePath + "/_app/immutable/" + file);
+      const to = path.resolve(basePath + '/plugin.js');
+      fs.copyFileSync(from, to);
       foundPluginCode = true;
       break;
     }
