@@ -6,5 +6,13 @@ export default defineConfig({
 
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}']
-	}
+	},
+
+	build: {
+		rollupOptions: {
+			input: {
+				plugin: 'src/plugin.ts', // makes the corresponding chunk available.
+			},
+		}
+	},
 });
