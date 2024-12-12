@@ -9,10 +9,11 @@ export default defineConfig({
 	},
 
 	build: {
+		sourcemap: true,
 		rollupOptions: {
 			input: {
 				plugin: 'src/plugin.ts' // makes the corresponding chunk available.
-			}
+			},
 		}
 	}
 });

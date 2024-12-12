@@ -17,6 +17,8 @@ if (process.argv.length !== 3) {
 	console.error('Usage: node scripts/post_build.js <dev|production>');
 	process.exit(1);
 } else {
+	console.log('Post build script started.');
+
 	let basePath;
 	if (process.argv[2] === 'dev') {
 		basePath = '.svelte-kit/output/client';
@@ -28,10 +30,11 @@ if (process.argv.length !== 3) {
 	}
 
 	const immutableDirFiles = fs.readdirSync(path.resolve(basePath + '/_app/immutable'));
-	const regex = new RegExp(/^plugin.*\.js/g);
+	const regex = new RegExp(/^plugin\..*\.js/g);
 	let foundPluginCode = false;
 	for (const file of immutableDirFiles) {
 		if (regex.test(file)) {
+			console.log('Found plugin code: ' + file);
 			const from = path.resolve(basePath + '/_app/immutable/' + file);
 			const to = path.resolve(basePath + '/plugin.js');
 			fs.copyFileSync(from, to);
