@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { PluginEvents } from '$lib/types/plugin_events';
+	import { PluginEvents, UIEvents, type PenpotEvent } from '$lib/types/plugin_events';
 	/*
   Copyright (c) 2024 Charly Schmidt aka Picorims<picorims.contact@gmail.com>,
   
@@ -8,30 +8,44 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
   */
 
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 
 	let selectionKind: "one" | "none" | "multiple" | "pattern" = $state("none");
 
 	function sendPing() {
-		parent.postMessage('ping', '*');
+		parent.postMessage(UIEvents.PING, '*');
 	}
 
 	function messageHandler(event: MessageEvent) {
-		if (event.data === PluginEvents.MULTIPLE_SELECTION) {
+    const e = event.data as PenpotEvent<PluginEvents | UIEvents>;
+		if (e.type === PluginEvents.MULTIPLE_SELECTION) {
 			selectionKind = "multiple";
-		} else if (event.data === PluginEvents.ONE_SELECTION) {
+		} else if (e.type === PluginEvents.ONE_SELECTION) {
       selectionKind = "one";
-    } else if (event.data === PluginEvents.NO_SELECTION) {
+    } else if (e.type === PluginEvents.NO_SELECTION) {
       selectionKind = "none";
-    } else if (event.data === PluginEvents.PATTERN_SELECTED) {
+    } else if (e.type === PluginEvents.PATTERN_SELECTED) {
       selectionKind = "pattern";
     } else {
-      throw new Error("Unknown event type: " + event.data);
+      throw new Error("Unknown event type: " + e.type);
     }
 	}
+
+  function createPattern() {
+    sendMessage({type: UIEvents.CREATE_PATTERN});
+  }
+
+  function sendMessage(msg: PenpotEvent<UIEvents>) {
+    parent.postMessage(msg, "*");
+  }
+
 	onMount(() => {
 		window.addEventListener('message', messageHandler);
 	});
+  // TODO figure out why it throws an error
+  // onDestroy(() => {
+  //   if (window) window.removeEventListener("message", messageHandler);
+  // })
 </script>
 
 <div class="container">
@@ -43,7 +57,7 @@
     <p class="body-l">Please only select one element at a time.</p>
   {:else if selectionKind === "one"}
     <p class="body-l">This element can be a pattern source (a copy will be made).</p>
-    <button type="button" data-appearance="primary">Create pattern</button>
+    <button type="button" data-appearance="primary" onclick={createPattern}>Create pattern</button>
   {:else if selectionKind === "pattern"}
     <p>TODO!</p>
 	{/if}

@@ -7,12 +7,23 @@
 */
 
 export enum PluginEvents {
-  NO_SELECTION = "no-selection",
-  ONE_SELECTION = "one-selection",
-  MULTIPLE_SELECTION = "multiple-selection",
-	PATTERN_SELECTED = "pattern-selected",
+	NO_SELECTION = 'no-selection',
+	ONE_SELECTION = 'one-selection',
+	MULTIPLE_SELECTION = 'multiple-selection',
+	PATTERN_SELECTED = 'pattern-selected',
+  PONG = 'pong',
 }
 
 export enum UIEvents {
-    
+  PING = 'ping',
+	CREATE_PATTERN = 'create-pattern',
+}
+
+/**
+ * Generic event type allows to handle enums both declared
+ * here and in plugin (copies).
+ */
+export interface PenpotEvent<T extends string> {
+  type: T;
+  content?: object;
 }
