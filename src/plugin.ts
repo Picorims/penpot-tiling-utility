@@ -63,6 +63,7 @@ function getDefaultPattern(): Pattern_v1 {
 		columns: 5,
 		radius: 50,
 		rotateAccordingToDirection: true,
+		rules: [],
 	};
 }
 

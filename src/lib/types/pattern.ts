@@ -13,4 +13,22 @@ export interface Pattern_v1 {
 	columns: number;
   radius: number;
   rotateAccordingToDirection: boolean;
+  rules: Rule[];
 }
+
+export interface BaseRule {
+  id: string;
+  type: string;
+  enabled: boolean;
+}
+
+export interface RandomRule extends BaseRule {
+  type: "randomize";
+  seed: number;
+  property: "x" | "y" | "rotation" | "width" | "height" | "opacity";
+  from : number;
+  to : number;
+}
+
+export type Rule = RandomRule;
+export type RuleKind = Rule["type"];

@@ -12,6 +12,7 @@
 	import { UIEvents } from '$lib/types/plugin_events';
 	import Checkbox from './atoms/Checkbox.svelte';
 	import NumberInput from './atoms/NumberInput.svelte';
+	import RulesManager from './RulesManager.svelte';
 
 	function apply(e: Event) {
 		e.preventDefault();
@@ -40,8 +41,10 @@
 		<option value="grid">Grid</option>
 		<option value="revolution">Revolution</option>
 	</select>
+
 	<NumberInput id="pattern-rows" label="Rows" min={1} bind:value={pattern.proxy.rows} />
 	<NumberInput id="pattern-columns" label="Columns" min={1} bind:value={pattern.proxy.columns} />
+
 	{#if pattern.proxy.mode === 'revolution'}
 		<NumberInput id="pattern-radius" label="Radius" min={1} bind:value={pattern.proxy.radius} />
 		<Checkbox
@@ -50,6 +53,12 @@
 			label={'Rotate according to direction'}
 		/>
 	{/if}
+
+	<h2 class="title-m">Rules</h2>
+	<RulesManager />
+
+	<hr>
+
 	<button type="submit" data-appearance="primary" disabled={locked.value}>Apply</button>
 	{#if locked.value}
 		<p>Loading...</p>
@@ -73,9 +82,9 @@
 		color: var(--da-quaternary);
 	}
 
-	p,
+	:global(p,
 	button,
-	select {
+	select) {
 		margin-bottom: var(--spacing-16);
 	}
 
