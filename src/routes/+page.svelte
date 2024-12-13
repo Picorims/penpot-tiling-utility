@@ -15,7 +15,8 @@
 	import { onDestroy, onMount } from 'svelte';
 
 	let selectionKind: 'one' | 'none' | 'multiple' | 'pattern' = $state('none');
-  let lockSendingPattern = $state(false);
+	let lockSendingPattern = $state(false);
+	let container: HTMLDivElement;
 
 	function sendPing() {
 		parent.postMessage(UIEvents.PING, '*');
@@ -37,10 +38,10 @@
 			if (!receivedPattern) {
 				throw new Error('Pattern creation failed');
 			}
-      lockSendingPattern = true;
+			lockSendingPattern = true;
 			pattern.proxy = receivedPattern as Pattern_v1;
-    } else if (e.type === PluginEvents.ERROR) {
-      console.error("plugin error", e.content);
+		} else if (e.type === PluginEvents.ERROR) {
+			console.error('plugin error', e.content);
 		} else {
 			throw new Error('Unknown event type: ' + e.type);
 		}
@@ -51,6 +52,10 @@
 	}
 
 	onMount(() => {
+		// switch to light theme if the user prefers so:
+		if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+			container?.setAttribute('data-theme', 'light');
+		}
 		window.addEventListener('message', messageHandler);
 	});
 	// TODO figure out why it throws an error
@@ -59,7 +64,7 @@
 	// })
 </script>
 
-<div class="container">
+<div class="container" data-theme="dark" bind:this={container}>
 	<h1 class="title-l">Tiling Utility</h1>
 	{#if selectionKind === 'none'}
 		<p class="body-l">To begin, select an element from which you would like to create a tiling.</p>
