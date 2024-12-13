@@ -18,7 +18,13 @@
 	}
 </script>
 
-<div class="form-group">
+<h2 class="title-m">Pattern editor</h2>
+
+<p>
+	<strong>Note:</strong> Changes take effect after pressing on the "Apply" button.
+</p>
+
+<div class="form-group container">
 	<label class="select-label" for="pattern-type">Pattern type</label>
 	<select id="pattern-type" class="select" bind:value={pattern.proxy.mode}>
 		<option value="grid">Grid</option>
@@ -26,4 +32,35 @@
 	</select>
     <button type="button" data-appearance="primary" onclick={apply}>Apply</button>
 </div>
-<pre>{JSON.stringify(pattern)}</pre>
+<pre>{JSON.stringify(pattern.proxy).replaceAll(",", ", ")}</pre>
+
+<style>
+	div.container {
+		width: 100%;
+	}
+	h2 {
+		margin-bottom: var(--spacing-16);
+		font-weight: bold;
+		color: var(--da-quaternary);
+	}
+
+	p, button, select {
+		margin-bottom: var(--spacing-16);
+	}
+
+	label.select-label {
+		display: block;
+		margin-bottom: var(--spacing-8);
+		color: var(--df-secondary);
+	}
+
+	pre {
+		width: 100%;
+		white-space: pre-wrap;
+		word-break: keep-all;
+		overflow: hidden;
+		background-color: var(--db-secondary);
+		border: 1px solid var(--db-tertiary);
+		padding: var(--spacing-16);
+	}
+</style>
