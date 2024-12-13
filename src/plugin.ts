@@ -191,9 +191,13 @@ function drawPattern(board: Board) {
 		return;
 	}
 
+	board.horizontalSizing = "fix";
+	board.verticalSizing = "fix";
+	
 	// compute base positions
 	if (pattern.mode === "revolution") {
-		const centerOffset = (source.height * pattern.rows) / 2;
+		const centerOffset = pattern.radius + (source.height * pattern.rows);
+		board.resize(2 * centerOffset, 2 * centerOffset);
 		for (let i = 0; i < pattern.rows; i++) {
 			const r = pattern.radius + i * source.height;
 			const columnPositions = new Map<number, { x: number, y: number }>();
@@ -205,6 +209,7 @@ function drawPattern(board: Board) {
 			positions.set(i, columnPositions);
 		}
 	} else if (pattern.mode === "grid") {
+		board.resize(source.width * pattern.rows, source.height * pattern.columns);
 		for (let i = 0; i < pattern.rows; i++) {
 			const columnPositions = new Map<number, { x: number, y: number }>();
 			for (let j = 0; j < pattern.columns; j++) {
@@ -217,9 +222,6 @@ function drawPattern(board: Board) {
 	}
 
 	// create shapes
-	board.horizontalSizing = "fix";
-	board.verticalSizing = "fix";
-	board.resize(source.width * pattern.rows, source.height * pattern.columns);
 	for (let i = 0; i < pattern.columns; i++) {
 		for (let j = 0; j < pattern.rows; j++) {
 			const position = positions.get(i)?.get(j);
