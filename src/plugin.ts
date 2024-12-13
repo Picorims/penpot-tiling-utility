@@ -164,11 +164,33 @@ function createPattern() {
 	penpot.ui.sendMessage({ type: PluginEvents_IC.SEND_PATTERN, content: getBoardPattern(board) });
 }
 
+/**
+ * 
+ * @param board The board being the container of the pattern
+ * @returns the parsed JSON pattern data
+ */
 function getBoardPattern(board: Board): Pattern_v1 {
+	if (board.getPluginData(PluginDataKey.IS_PATTERN) !== 'true') {
+		console.error('Board is not a pattern');
+		penpot.ui.sendMessage({ type: PluginEvents_IC.ERROR, content: 'Board is not a pattern, returning default pattern' });
+		return getDefaultPattern();
+	}
 	return JSON.parse(board.getPluginData(PluginDataKey.PATTERN)) as Pattern_v1;
 }
 
+/**
+ * Clears existing shapes (except the source) if any,
+ * then create all shapes and position them according
+ * to the pattern configuration.
+ * @param board The board being the container of the pattern
+ * @returns 
+ */
 function drawPattern(board: Board) {
+	if (board.getPluginData(PluginDataKey.IS_PATTERN) !== 'true') {
+		console.error('Board is not a pattern');
+		penpot.ui.sendMessage({ type: PluginEvents_IC.ERROR, content: 'Board is not a pattern' });
+		return;
+	}
 	// clear existing shapes
 	board.children.forEach((shape) => {
 		if (shape.getPluginData(PluginDataKey.IS_SOURCE) !== 'true') {
