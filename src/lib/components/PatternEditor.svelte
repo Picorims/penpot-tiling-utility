@@ -31,11 +31,13 @@
 		<option value="grid">Grid</option>
 		<option value="revolution">Revolution</option>
 	</select>
-	<Checkbox
-		id="pattern-type"
-		bind:checked={pattern.proxy.rotateAccordingToDirection}
-		label={'Rotate according to direction'}
-	/>
+	{#if pattern.proxy.mode === 'revolution'}
+		<Checkbox
+			id="pattern-type"
+			bind:checked={pattern.proxy.rotateAccordingToDirection}
+			label={'Rotate according to direction'}
+		/>
+	{/if}
 	<button type="button" data-appearance="primary" onclick={apply}>Apply</button>
 </div>
 <pre>{JSON.stringify(pattern.proxy).replaceAll(',', ', ')}</pre>
