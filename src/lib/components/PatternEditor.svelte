@@ -20,6 +20,12 @@
 		locked.value = true;
 		sendMessage({ type: UIEvents.UPDATE_PATTERN, content: snapshot });
 	}
+
+	function copyToClipboard() {
+		const str = JSON.stringify(pattern.proxy);
+		navigator.clipboard.writeText(str);
+		alert('Pattern copied to clipboard');
+	}
 </script>
 
 <h2 class="title-m">Pattern editor</h2>
@@ -49,6 +55,12 @@
 		<p>Loading...</p>
 	{/if}
 </form>
+
+<h2 class="title-m">Debugging information</h2>
+
+<button type="button" data-appearance="secondary" onclick={copyToClipboard}
+	>Copy to clipboard</button
+>
 <pre>{JSON.stringify(pattern.proxy).replaceAll(',', ', ')}</pre>
 
 <style>
