@@ -14,7 +14,7 @@
 
 import type { PenpotEvent } from '$lib/types/plugin_events';
 import type { Pattern_v1 } from '$lib/types/pattern';
-import type { Board } from '@penpot/plugin-types';
+import type { Board, Shape } from '@penpot/plugin-types';
 
 enum PluginEvents_IC {
 	NO_SELECTION = 'no-selection',
@@ -41,6 +41,8 @@ enum PluginDataKey {
 	SOURCE_ID = 'sourceId',
 	PATTERN = 'pattern',
 	IS_SOURCE = 'isSource',
+	ROW_INDEX = 'rowIndex',
+	COLUMN_INDEX = 'columnIndex',
 }
 
 
@@ -188,8 +190,8 @@ interface Position {
 }
 
 /**
- * Clears existing shapes (except the source) if any,
- * then create all shapes and position them according
+ * Clears existing shapes (except the source) in excess if any,
+ * then create or modify all shapes and position them according
  * to the pattern configuration.
  * @param board The board being the container of the pattern
  * @returns 
@@ -208,10 +210,35 @@ function drawPattern(board: Board) {
 		lockModifications = false;
 		return;
 	}
+
 	// clear existing shapes
+	
+	// we need to know the max column and row index
+	// to know if clones are missing upon data change
+	let maxRowFound = 0;
+	let maxColFound = 0;
+	const shapeCache = new Map<number, Map<number, Shape>>();
 	board.children.forEach((shape) => {
 		if (shape.getPluginData(PluginDataKey.IS_SOURCE) !== 'true') {
-			shape.remove();
+			const row = shape.getPluginData(PluginDataKey.ROW_INDEX);
+			const col = shape.getPluginData(PluginDataKey.COLUMN_INDEX);
+			console.debug("Checking", row, col);
+			if (row === undefined || col === undefined) {
+				console.error('Invalid row or column index (initialization was forgotten somewhere)');
+				return;
+			}
+			const rowInt = parseInt(row);
+			const colInt = parseInt(col);
+			maxColFound = Math.max(maxColFound, colInt);
+			maxRowFound = Math.max(maxRowFound, rowInt);
+			if (rowInt >= getBoardPattern(board).rows || colInt >= getBoardPattern(board).columns) {	
+				shape.remove();
+				return;
+			}
+			if (!shapeCache.has(rowInt)) {
+				shapeCache.set(rowInt, new Map<number, Shape>());
+			}
+			shapeCache.get(rowInt)?.set(colInt, shape);
 		}
 	});
 
@@ -285,19 +312,33 @@ function drawPattern(board: Board) {
 				console.error('No position found for', i, j);
 				continue;
 			}
-			console.debug("cloning at", position);
-			const clone = source.clone();
-			clone.setPluginData(PluginDataKey.IS_SOURCE, 'false');
-			clone.blocked = false;
-			clone.name = clone.name.replace(" (source)", ` (${i}, ${j})`);
-			// Note: the clone is already a child of the board
-			
+			console.debug("updating at", position);
+
+			let clone: Shape | undefined;
+			if (i > maxRowFound || j > maxColFound || maxRowFound === 0 || maxColFound === 0) {
+				
+				clone = source.clone();
+				clone.setPluginData(PluginDataKey.IS_SOURCE, 'false');
+				clone.name = clone.name.replace(" (source)", ` (${i}, ${j})`);
+				clone.setPluginData(PluginDataKey.ROW_INDEX, i.toString());
+				clone.setPluginData(PluginDataKey.COLUMN_INDEX, j.toString());
+				// Note: the clone is already a child of the board
+				clone.hidden = false;
+			} else {
+				clone = shapeCache.get(i)?.get(j);
+			}
+
+			if (!clone) {
+				console.error('No clone found (this is not supposed to happen)');
+				continue;
+			}
+				
 			// apply data
+			clone.blocked = false;
 			clone.x = position.x + board.x;
 			clone.y = position.y + board.y;
+			clone.rotation = source.rotation;
 			clone.rotate(position.rot);
-			clone.hidden = false;
-
 			clone.blocked = true;
 		}
 	}
