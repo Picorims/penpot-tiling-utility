@@ -235,9 +235,13 @@ function drawPattern(board: Board) {
 	if (pattern.mode === "revolution") {
 		const centerOffset = pattern.radius + (source.height * pattern.rows);
 		board.resize(2 * centerOffset, 2 * centerOffset);
+		
+		// a row is a circle
 		for (let i = 0; i < pattern.rows; i++) {
 			const r = pattern.radius + i * source.height;
 			const columnPositions = new Map<number, Position>();
+
+			// a column is a point on the circle
 			for (let j = 0; j < pattern.columns; j++) {
 				const x = r * Math.cos(j * (2 * Math.PI / pattern.columns)) + centerOffset;
 				const y = r * Math.sin(j * (2 * Math.PI / pattern.columns)) + centerOffset;
@@ -248,8 +252,11 @@ function drawPattern(board: Board) {
 		}
 	} else if (pattern.mode === "grid") {
 		board.resize(source.width * pattern.rows, source.height * pattern.columns);
+		// y axis
 		for (let i = 0; i < pattern.rows; i++) {
 			const columnPositions = new Map<number, Position>();
+			
+			// x axis
 			for (let j = 0; j < pattern.columns; j++) {
 				const x = j * source.width;
 				const y = i * source.height;
@@ -260,8 +267,8 @@ function drawPattern(board: Board) {
 	}
 
 	// create shapes
-	for (let i = 0; i < pattern.columns; i++) {
-		for (let j = 0; j < pattern.rows; j++) {
+	for (let i = 0; i < pattern.rows; i++) {
+		for (let j = 0; j < pattern.columns; j++) {
 			const position = positions.get(i)?.get(j);
 			if (!position) {
 				console.error('No position found for', i, j);
