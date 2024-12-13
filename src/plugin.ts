@@ -24,6 +24,7 @@ enum PluginEvents_IC {
 	PONG = 'pong',
 	ERROR = 'error',
 	SEND_PATTERN = 'send-pattern',
+	ACKNOWLEDGE_UPDATE_PATTERN = 'acknowledge-update-pattern',
 }
 
 enum UIEvents_IC {
@@ -290,6 +291,8 @@ function drawPattern(board: Board) {
 			clone.blocked = true;
 		}
 	}
+
+	penpot.ui.sendMessage({ type: PluginEvents_IC.ACKNOWLEDGE_UPDATE_PATTERN });
 }
 
 /**

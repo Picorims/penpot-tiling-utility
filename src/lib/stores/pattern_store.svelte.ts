@@ -22,3 +22,6 @@ export let pattern = $state<{proxy: Pattern_v1}>({
         rotateAccordingToDirection: false,
     }
 });
+
+// eslint-disable-next-line prefer-const
+export let locked = $state<{value: boolean}>({value: false});

@@ -8,7 +8,7 @@
     */
 
 	import { sendMessage } from '$lib/plugin_utils';
-	import { pattern } from '$lib/stores/pattern_store.svelte';
+	import { locked, pattern } from '$lib/stores/pattern_store.svelte';
 	import { UIEvents } from '$lib/types/plugin_events';
 	import Checkbox from './atoms/Checkbox.svelte';
 	import NumberInput from './atoms/NumberInput.svelte';
@@ -17,6 +17,7 @@
 		e.preventDefault();
 		const snapshot = $state.snapshot(pattern.proxy);
 		console.log('pattern changed', snapshot);
+		locked.value = true;
 		sendMessage({ type: UIEvents.UPDATE_PATTERN, content: snapshot });
 	}
 </script>
@@ -43,7 +44,10 @@
 			label={'Rotate according to direction'}
 		/>
 	{/if}
-	<button type="submit" data-appearance="primary">Apply</button>
+	<button type="submit" data-appearance="primary" disabled={locked.value}>Apply</button>
+	{#if locked.value}
+		<p>Loading...</p>
+	{/if}
 </form>
 <pre>{JSON.stringify(pattern.proxy).replaceAll(',', ', ')}</pre>
 

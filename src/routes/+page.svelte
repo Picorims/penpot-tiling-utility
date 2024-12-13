@@ -1,7 +1,7 @@
 <script lang="ts">
 	import PatternEditor from '$lib/components/PatternEditor.svelte';
 	import { sendMessage } from '$lib/plugin_utils';
-	import { pattern } from '$lib/stores/pattern_store.svelte';
+	import { locked, pattern } from '$lib/stores/pattern_store.svelte';
 	import type { Pattern_v1 } from '$lib/types/pattern';
 	import { PluginEvents, UIEvents, type PenpotEvent } from '$lib/types/plugin_events';
 	/*
@@ -40,6 +40,8 @@
 			}
 			lockSendingPattern = true;
 			pattern.proxy = receivedPattern as Pattern_v1;
+		} else if (e.type === PluginEvents.ACKNOWLEDGE_UPDATE_PATTERN) {
+			locked.value = false;
 		} else if (e.type === PluginEvents.ERROR) {
 			console.error('plugin error', e.content);
 		} else {
