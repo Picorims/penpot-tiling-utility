@@ -262,7 +262,7 @@ function drawPattern(board: Board) {
 			positions.set(i, columnPositions);
 		}
 	} else if (pattern.mode === "grid") {
-		board.resize(source.width * pattern.rows, source.height * pattern.columns);
+		board.resize(source.width * pattern.columns, source.height * pattern.rows);
 		// y axis
 		for (let i = 0; i < pattern.rows; i++) {
 			const columnPositions = new Map<number, Position>();
