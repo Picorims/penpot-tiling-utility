@@ -47,7 +47,7 @@ enum PluginDataKey {
 let selectionCache: string[] = [];
 
 penpot.ui.open('Tiling Utility', '', {
-	width: 400,
+	width: 300,
 	height: 300,
 });
 
@@ -58,6 +58,7 @@ function getDefaultPattern(): Pattern_v1 {
 		rows: 5,
 		columns: 5,
 		radius: 50,
+		rotateAccordingToDirection: true,
 	};
 }
 
@@ -178,6 +179,12 @@ function getBoardPattern(board: Board): Pattern_v1 {
 	return JSON.parse(board.getPluginData(PluginDataKey.PATTERN)) as Pattern_v1;
 }
 
+interface Position {
+	x: number;
+	y: number;
+	rot: number;
+}
+
 /**
  * Clears existing shapes (except the source) if any,
  * then create all shapes and position them according
@@ -186,6 +193,7 @@ function getBoardPattern(board: Board): Pattern_v1 {
  * @returns 
  */
 function drawPattern(board: Board) {
+	console.info("Drawing pattern");
 	if (board.getPluginData(PluginDataKey.IS_PATTERN) !== 'true') {
 		console.error('Board is not a pattern');
 		penpot.ui.sendMessage({ type: PluginEvents_IC.ERROR, content: 'Board is not a pattern' });
@@ -199,11 +207,12 @@ function drawPattern(board: Board) {
 	});
 
 	const pattern = getBoardPattern(board);
+	console.debug("Pattern:", pattern);
 
 	/**
 	 * rows, then columns, then positions
 	 */
-	const positions = new Map<number, Map<number, { x: number, y: number }>>();
+	const positions = new Map<number, Map<number, Position>>();
 
 	const sourceId = board.getPluginData(PluginDataKey.SOURCE_ID);
 	const source = board.children.find((shape) => shape.id === sourceId);
@@ -222,22 +231,23 @@ function drawPattern(board: Board) {
 		board.resize(2 * centerOffset, 2 * centerOffset);
 		for (let i = 0; i < pattern.rows; i++) {
 			const r = pattern.radius + i * source.height;
-			const columnPositions = new Map<number, { x: number, y: number }>();
+			const columnPositions = new Map<number, Position>();
 			for (let j = 0; j < pattern.columns; j++) {
 				const x = r * Math.cos(j * (2 * Math.PI / pattern.columns)) + centerOffset;
 				const y = r * Math.sin(j * (2 * Math.PI / pattern.columns)) + centerOffset;
-				columnPositions.set(j, { x, y });
+				const rot = pattern.rotateAccordingToDirection ? j * (360 / pattern.columns) + 90 : 0;
+				columnPositions.set(j, { x, y, rot });
 			}
 			positions.set(i, columnPositions);
 		}
 	} else if (pattern.mode === "grid") {
 		board.resize(source.width * pattern.rows, source.height * pattern.columns);
 		for (let i = 0; i < pattern.rows; i++) {
-			const columnPositions = new Map<number, { x: number, y: number }>();
+			const columnPositions = new Map<number, Position>();
 			for (let j = 0; j < pattern.columns; j++) {
 				const x = j * source.width;
 				const y = i * source.height;
-				columnPositions.set(j, { x, y });
+				columnPositions.set(j, { x, y, rot: 0 });
 			}
 			positions.set(i, columnPositions);
 		}
@@ -251,14 +261,20 @@ function drawPattern(board: Board) {
 				console.error('No position found for', i, j);
 				continue;
 			}
-			console.log("cloning at", position);
+			console.debug("cloning at", position);
 			const clone = source.clone();
 			clone.setPluginData(PluginDataKey.IS_SOURCE, 'false');
-			// Note: the clone is already a child of the board
+			clone.blocked = false;
 			clone.name = clone.name.replace(" (source)", ` (${i}, ${j})`);
+			// Note: the clone is already a child of the board
+			
+			// apply data
 			clone.x = position.x;
 			clone.y = position.y;
+			clone.rotate(position.rot);
 			clone.hidden = false;
+
+			clone.blocked = true;
 		}
 	}
 }

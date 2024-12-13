@@ -19,5 +19,6 @@ export let pattern = $state<{proxy: Pattern_v1}>({
         mode: "grid",
         radius: 0,
         version: 1,
+        rotateAccordingToDirection: false,
     }
 });

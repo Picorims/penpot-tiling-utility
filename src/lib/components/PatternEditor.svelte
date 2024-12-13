@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { sendMessage } from '$lib/plugin_utils';
 	/*
       Copyright (c) 2024 Charly Schmidt aka Picorims<picorims.contact@gmail.com>,
     
@@ -8,8 +7,10 @@
       file, You can obtain one at http://mozilla.org/MPL/2.0/.
     */
 
+	import { sendMessage } from '$lib/plugin_utils';
 	import { pattern } from '$lib/stores/pattern_store.svelte';
 	import { UIEvents } from '$lib/types/plugin_events';
+	import Checkbox from './atoms/Checkbox.svelte';
 
 	function apply() {
 		const snapshot = $state.snapshot(pattern.proxy);
@@ -30,9 +31,14 @@
 		<option value="grid">Grid</option>
 		<option value="revolution">Revolution</option>
 	</select>
-    <button type="button" data-appearance="primary" onclick={apply}>Apply</button>
+	<Checkbox
+		id="pattern-type"
+		bind:checked={pattern.proxy.rotateAccordingToDirection}
+		label={'Rotate according to direction'}
+	/>
+	<button type="button" data-appearance="primary" onclick={apply}>Apply</button>
 </div>
-<pre>{JSON.stringify(pattern.proxy).replaceAll(",", ", ")}</pre>
+<pre>{JSON.stringify(pattern.proxy).replaceAll(',', ', ')}</pre>
 
 <style>
 	div.container {
@@ -44,7 +50,9 @@
 		color: var(--da-quaternary);
 	}
 
-	p, button, select {
+	p,
+	button,
+	select {
 		margin-bottom: var(--spacing-16);
 	}
 

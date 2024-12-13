@@ -11,5 +11,6 @@ export interface Pattern_v1 {
 	mode: "revolution" | "grid";
 	rows: number;
 	columns: number;
-    radius: number;
+  radius: number;
+  rotateAccordingToDirection: boolean;
 }
