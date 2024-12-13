@@ -46,6 +46,7 @@ enum PluginDataKey {
 
 
 let selectionCache: string[] = [];
+let lockModifications = false;
 
 penpot.ui.open('Tiling Utility', '', {
 	width: 300,
@@ -194,10 +195,17 @@ interface Position {
  * @returns 
  */
 function drawPattern(board: Board) {
+	if (lockModifications) {
+		console.warn("Modifications are locked");
+		return;
+	}
+	lockModifications = true;
+	
 	console.info("Drawing pattern");
 	if (board.getPluginData(PluginDataKey.IS_PATTERN) !== 'true') {
 		console.error('Board is not a pattern');
 		penpot.ui.sendMessage({ type: PluginEvents_IC.ERROR, content: 'Board is not a pattern' });
+		lockModifications = false;
 		return;
 	}
 	// clear existing shapes
@@ -213,6 +221,7 @@ function drawPattern(board: Board) {
 	if (!validity.valid) {
 		console.error('Invalid pattern:', validity.context);
 		penpot.ui.sendMessage({ type: PluginEvents_IC.ERROR, content: validity.context });
+		lockModifications = false;
 		return;
 	}
 
@@ -226,6 +235,7 @@ function drawPattern(board: Board) {
 	if (!source) {
 		console.error('No source shape found');
 		penpot.ui.sendMessage({ type: PluginEvents_IC.ERROR, content: 'No source shape found' });
+		lockModifications = false;
 		return;
 	}
 
@@ -293,6 +303,7 @@ function drawPattern(board: Board) {
 	}
 
 	penpot.ui.sendMessage({ type: PluginEvents_IC.ACKNOWLEDGE_UPDATE_PATTERN });
+	lockModifications = false;
 }
 
 /**
