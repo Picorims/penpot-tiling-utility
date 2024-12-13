@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { error } from "@sveltejs/kit";
+
 	/*
       Copyright (c) 2024 Charly Schmidt aka Picorims<picorims.contact@gmail.com>,
     
@@ -23,27 +25,31 @@
 		step?: number;
 	} = $props();
 
-	function enforceBounds() {
-		if (min && value < min) {
-			value = min;
-		}
-		if (max && value > max) {
-			value = max;
-		}
-	}
+    let invalidBounds = $state(false);
+
+    function checkBounds() {
+        invalidBounds = false;
+        if (min && value < min) {
+            invalidBounds = true;
+        }
+        if (max && value > max) {
+            invalidBounds = true;
+        }
+    }
 </script>
 
 <div class="input-container">
 	<label class="input-label" for={id}>{label}</label>
 	<input
 		class="input"
+        class:error={invalidBounds}
 		type="number"
 		{id}
 		{min}
 		{max}
 		{step}
 		bind:value
-		onfocusout={enforceBounds}
+        oninput={checkBounds}
 	/>
 </div>
 

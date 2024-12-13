@@ -13,7 +13,8 @@
 	import Checkbox from './atoms/Checkbox.svelte';
 	import NumberInput from './atoms/NumberInput.svelte';
 
-	function apply() {
+	function apply(e: Event) {
+		e.preventDefault();
 		const snapshot = $state.snapshot(pattern.proxy);
 		console.log('pattern changed', snapshot);
 		sendMessage({ type: UIEvents.UPDATE_PATTERN, content: snapshot });
@@ -26,7 +27,7 @@
 	<strong>Note:</strong> Changes take effect after pressing on the "Apply" button.
 </p>
 
-<div class="form-group container">
+<form class="form-group container" onsubmit={apply}>
 	<label class="select-label" for="pattern-type">Pattern type</label>
 	<select id="pattern-type" class="select" bind:value={pattern.proxy.mode}>
 		<option value="grid">Grid</option>
@@ -41,12 +42,12 @@
 			label={'Rotate according to direction'}
 		/>
 	{/if}
-	<button type="button" data-appearance="primary" onclick={apply}>Apply</button>
-</div>
+	<button type="submit" data-appearance="primary">Apply</button>
+</form>
 <pre>{JSON.stringify(pattern.proxy).replaceAll(',', ', ')}</pre>
 
 <style>
-	div.container {
+	form.container {
 		width: 100%;
 	}
 	h2 {
