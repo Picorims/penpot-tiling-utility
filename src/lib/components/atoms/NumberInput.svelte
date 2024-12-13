@@ -23,15 +23,38 @@
 		step?: number;
 	} = $props();
 
-    function enforceBounds() {
-        if (min && value < min) {
-            value = min;
-        }
-        if (max && value > max) {
-            value = max;
-        }
-    }
+	function enforceBounds() {
+		if (min && value < min) {
+			value = min;
+		}
+		if (max && value > max) {
+			value = max;
+		}
+	}
 </script>
 
-<label class="input-label" for={id}>{label}</label>
-<input class="input success" type="number" {id} {min} {max} {step} bind:value onfocusout={enforceBounds} />
+<div class="input-container">
+	<label class="input-label" for={id}>{label}</label>
+	<input
+		class="input"
+		type="number"
+		{id}
+		{min}
+		{max}
+		{step}
+		bind:value
+		onfocusout={enforceBounds}
+	/>
+</div>
+
+<style>
+	div.input-container {
+		margin-bottom: var(--spacing-16);
+	}
+
+    label.input-label {
+		display: block;
+		margin-bottom: var(--spacing-4);
+		color: var(--df-secondary);
+	}
+</style>

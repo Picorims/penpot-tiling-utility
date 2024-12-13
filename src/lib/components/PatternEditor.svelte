@@ -63,7 +63,7 @@
 
 	label.select-label {
 		display: block;
-		margin-bottom: var(--spacing-8);
+		margin-bottom: var(--spacing-4);
 		color: var(--df-secondary);
 	}
 
