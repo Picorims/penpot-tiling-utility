@@ -1,4 +1,8 @@
 <script lang="ts">
+	import PatternEditor from '$lib/components/PatternEditor.svelte';
+	import { sendMessage } from '$lib/plugin_utils';
+	import { pattern } from '$lib/stores/pattern_store.svelte';
+	import type { Pattern_v1 } from '$lib/types/pattern';
 	import { PluginEvents, UIEvents, type PenpotEvent } from '$lib/types/plugin_events';
 	/*
   Copyright (c) 2024 Charly Schmidt aka Picorims<picorims.contact@gmail.com>,
@@ -10,74 +14,93 @@
 
 	import { onDestroy, onMount } from 'svelte';
 
-	let selectionKind: "one" | "none" | "multiple" | "pattern" = $state("none");
+	let selectionKind: 'one' | 'none' | 'multiple' | 'pattern' = $state('none');
+  let lockSendingPattern = $state(false);
 
 	function sendPing() {
 		parent.postMessage(UIEvents.PING, '*');
 	}
 
 	function messageHandler(event: MessageEvent) {
-    const e = event.data as PenpotEvent<PluginEvents | UIEvents>;
+		const e = event.data as PenpotEvent<PluginEvents | UIEvents>;
 		if (e.type === PluginEvents.MULTIPLE_SELECTION) {
-			selectionKind = "multiple";
+			selectionKind = 'multiple';
 		} else if (e.type === PluginEvents.ONE_SELECTION) {
-      selectionKind = "one";
-    } else if (e.type === PluginEvents.NO_SELECTION) {
-      selectionKind = "none";
-    } else if (e.type === PluginEvents.PATTERN_SELECTED) {
-      selectionKind = "pattern";
-    } else {
-      throw new Error("Unknown event type: " + e.type);
-    }
+			selectionKind = 'one';
+		} else if (e.type === PluginEvents.NO_SELECTION) {
+			selectionKind = 'none';
+		} else if (e.type === PluginEvents.PATTERN_SELECTED) {
+			selectionKind = 'pattern';
+			sendMessage({ type: UIEvents.REQUEST_CURRENT_PATTERN });
+		} else if (e.type === PluginEvents.SEND_PATTERN) {
+			const receivedPattern = e.content;
+			if (!receivedPattern) {
+				throw new Error('Pattern creation failed');
+			}
+      lockSendingPattern = true;
+			pattern.proxy = receivedPattern as Pattern_v1;
+    } else if (e.type === PluginEvents.ERROR) {
+      console.error("plugin error", e.content);
+		} else {
+			throw new Error('Unknown event type: ' + e.type);
+		}
 	}
 
-  function createPattern() {
-    sendMessage({type: UIEvents.CREATE_PATTERN});
-  }
+	function createPattern() {
+		sendMessage({ type: UIEvents.CREATE_PATTERN });
+	}
 
-  function sendMessage(msg: PenpotEvent<UIEvents>) {
-    parent.postMessage(msg, "*");
-  }
+	// $effect(() => {
+  //   if (selectionKind === 'pattern') {
+  //     if (lockSendingPattern) {
+  //       lockSendingPattern = false;
+  //       return;
+  //     }
+  //     const snapshot = $state.snapshot(pattern.proxy);
+  //     console.log("pattern changed", snapshot);
+  //     sendMessage({ type: UIEvents.UPDATE_PATTERN, content: snapshot });
+  //   }
+  // });
 
 	onMount(() => {
 		window.addEventListener('message', messageHandler);
 	});
-  // TODO figure out why it throws an error
-  // onDestroy(() => {
-  //   if (window) window.removeEventListener("message", messageHandler);
-  // })
+	// TODO figure out why it throws an error
+	// onDestroy(() => {
+	//   if (window) window.removeEventListener("message", messageHandler);
+	// })
 </script>
 
 <div class="container">
-  <h1 class="title-l">Tiling Utility</h1>
-	{#if selectionKind === "none"}
+	<h1 class="title-l">Tiling Utility</h1>
+	{#if selectionKind === 'none'}
 		<p class="body-l">To begin, select an element from which you would like to create a tiling.</p>
 		<p class="body-l">Alternatively, select an existing pattern to modify it.</p>
-  {:else if selectionKind === "multiple"}
-    <p class="body-l">Please only select one element at a time.</p>
-  {:else if selectionKind === "one"}
-    <p class="body-l">This element can be a pattern source (a copy will be made).</p>
-    <button type="button" data-appearance="primary" onclick={createPattern}>Create pattern</button>
-  {:else if selectionKind === "pattern"}
-    <p>TODO!</p>
+	{:else if selectionKind === 'multiple'}
+		<p class="body-l">Please only select one element at a time.</p>
+	{:else if selectionKind === 'one'}
+		<p class="body-l">This element can be a pattern source (a copy will be made).</p>
+		<button type="button" data-appearance="primary" onclick={createPattern}>Create pattern</button>
+	{:else if selectionKind === 'pattern'}
+		<PatternEditor />
 	{/if}
 </div>
 
 <style>
-  div.container {
-    width: 100vw;
-    height: 100vh;
-    padding: var(--spacing-24) 0;
-    background-color: var(--db-primary);
-    color: var(--df-primary);
-  }
+	div.container {
+		width: 100vw;
+		height: 100vh;
+		padding: var(--spacing-24) 0;
+		background-color: var(--db-primary);
+		color: var(--df-primary);
+	}
 
-  h1 {
-    margin-bottom: var(--spacing-16);
-    font-weight: bold;
-    color: var(--da-tertiary);
-  }
-  p {
-    margin-bottom: var(--spacing-16);
-  }
+	h1 {
+		margin-bottom: var(--spacing-16);
+		font-weight: bold;
+		color: var(--da-tertiary);
+	}
+	p {
+		margin-bottom: var(--spacing-16);
+	}
 </style>

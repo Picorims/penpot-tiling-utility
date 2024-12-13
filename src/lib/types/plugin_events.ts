@@ -12,11 +12,15 @@ export enum PluginEvents {
 	MULTIPLE_SELECTION = 'multiple-selection',
 	PATTERN_SELECTED = 'pattern-selected',
   PONG = 'pong',
+  ERROR = 'error',
+  SEND_PATTERN = 'send-pattern',
 }
 
 export enum UIEvents {
   PING = 'ping',
 	CREATE_PATTERN = 'create-pattern',
+  REQUEST_CURRENT_PATTERN = 'request-current-pattern',
+  UPDATE_PATTERN = 'update-pattern',
 }
 
 /**
@@ -27,3 +31,5 @@ export interface PenpotEvent<T extends string> {
   type: T;
   content?: object;
 }
+
+// TODO use conditional types for stronger typing of events

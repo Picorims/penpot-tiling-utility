@@ -22,12 +22,15 @@ enum PluginEvents_IC {
 	MULTIPLE_SELECTION = 'multiple-selection',
 	PATTERN_SELECTED = 'pattern-selected',
 	PONG = 'pong',
-	ERROR = 'error'
+	ERROR = 'error',
+	SEND_PATTERN = 'send-pattern',
 }
 
 enum UIEvents_IC {
 	PING = 'ping',
-	CREATE_PATTERN = 'create-pattern'
+	CREATE_PATTERN = 'create-pattern',
+	REQUEST_CURRENT_PATTERN = 'request-current-pattern',
+	UPDATE_PATTERN = 'update-pattern',
 }
 
 type EventT = PenpotEvent<PluginEvents_IC | UIEvents_IC>;
@@ -36,6 +39,7 @@ enum PluginDataKey {
 	IS_PATTERN = 'isPattern',
 	SOURCE_ID = 'sourceId',
 	PATTERN = 'pattern',
+	IS_SOURCE = 'isSource',
 }
 
 
@@ -66,6 +70,30 @@ penpot.ui.onMessage<EventT>((message) => {
 		penpot.ui.sendMessage(PluginEvents_IC.PONG);
 	} else if (message.type === UIEvents_IC.CREATE_PATTERN) {
 		createPattern();
+	} else if (message.type === UIEvents_IC.REQUEST_CURRENT_PATTERN) {
+		if (selectionCache.length === 0) {
+			penpot.ui.sendMessage({ type: PluginEvents_IC.ERROR, content: 'No selection' });
+			return;
+		}
+		const board = penpot.currentPage?.getShapeById(selectionCache[0]) as Board;
+		if (board.getPluginData(PluginDataKey.IS_PATTERN) !== 'true') {
+			penpot.ui.sendMessage({ type: PluginEvents_IC.ERROR, content: 'No pattern selected' });
+			return;
+		}
+		penpot.ui.sendMessage({ type: PluginEvents_IC.SEND_PATTERN, content: getBoardPattern(board) });
+	} else if (message.type === UIEvents_IC.UPDATE_PATTERN) {
+		if (selectionCache.length === 0) {
+			penpot.ui.sendMessage({ type: PluginEvents_IC.ERROR, content: 'No selection' });
+			return;
+		}
+		const board = penpot.currentPage?.getShapeById(selectionCache[0]) as Board;
+		if (board.getPluginData(PluginDataKey.IS_PATTERN) !== 'true') {
+			penpot.ui.sendMessage({ type: PluginEvents_IC.ERROR, content: 'No pattern selected' });
+			return;
+		}
+		const pattern = message.content as Pattern_v1;
+		board.setPluginData(PluginDataKey.PATTERN, JSON.stringify(pattern));
+		drawPattern(board);
 	} else {
 		console.error('Unknown message from UI:', message);
 	}
@@ -120,6 +148,7 @@ function createPattern() {
 	clone.hidden = true;
 	clone.blocked = true;
 	clone.name += " (source)";
+	clone.setPluginData(PluginDataKey.IS_SOURCE, 'true');
 
 	board.appendChild(clone);
 	board.setPluginData(PluginDataKey.SOURCE_ID, clone.id);
@@ -132,10 +161,23 @@ function createPattern() {
 
 	board.setPluginData(PluginDataKey.PATTERN, JSON.stringify(getDefaultPattern()));
 	drawPattern(board);
+	penpot.ui.sendMessage({ type: PluginEvents_IC.SEND_PATTERN, content: getBoardPattern(board) });
+}
+
+function getBoardPattern(board: Board): Pattern_v1 {
+	return JSON.parse(board.getPluginData(PluginDataKey.PATTERN)) as Pattern_v1;
 }
 
 function drawPattern(board: Board) {
-	const pattern = JSON.parse(board.getPluginData(PluginDataKey.PATTERN)) as Pattern_v1;
+	// clear existing shapes
+	board.children.forEach((shape) => {
+		if (shape.getPluginData(PluginDataKey.IS_SOURCE) !== 'true') {
+			shape.remove();
+		}
+	});
+
+	const pattern = getBoardPattern(board);
+
 	/**
 	 * rows, then columns, then positions
 	 */
@@ -187,6 +229,7 @@ function drawPattern(board: Board) {
 			}
 			console.log("cloning at", position);
 			const clone = source.clone();
+			clone.setPluginData(PluginDataKey.IS_SOURCE, 'false');
 			// Note: the clone is already a child of the board
 			clone.name = clone.name.replace(" (source)", ` (${i}, ${j})`);
 			clone.x = position.x;
