@@ -50,18 +50,6 @@
 		sendMessage({ type: UIEvents.CREATE_PATTERN });
 	}
 
-	// $effect(() => {
-  //   if (selectionKind === 'pattern') {
-  //     if (lockSendingPattern) {
-  //       lockSendingPattern = false;
-  //       return;
-  //     }
-  //     const snapshot = $state.snapshot(pattern.proxy);
-  //     console.log("pattern changed", snapshot);
-  //     sendMessage({ type: UIEvents.UPDATE_PATTERN, content: snapshot });
-  //   }
-  // });
-
 	onMount(() => {
 		window.addEventListener('message', messageHandler);
 	});
