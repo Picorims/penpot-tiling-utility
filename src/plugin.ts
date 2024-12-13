@@ -208,6 +208,12 @@ function drawPattern(board: Board) {
 
 	const pattern = getBoardPattern(board);
 	console.debug("Pattern:", pattern);
+	const validity = checkPatternValidity(pattern);
+	if (!validity.valid) {
+		console.error('Invalid pattern:', validity.context);
+		penpot.ui.sendMessage({ type: PluginEvents_IC.ERROR, content: validity.context });
+		return;
+	}
 
 	/**
 	 * rows, then columns, then positions
@@ -277,4 +283,24 @@ function drawPattern(board: Board) {
 			clone.blocked = true;
 		}
 	}
+}
+
+/**
+ * Says if the pattern is valid or not. Stops at the first invalidity found.
+ * @param pattern The pattern to check
+ * @returns 
+ */
+function checkPatternValidity (pattern: Pattern_v1): {valid: boolean, context: string} {
+	if (pattern.mode === "revolution") {
+		if (pattern.radius <= 0) {
+			return {valid: false, context: "Radius must be greater than 0"};
+		}
+	}
+	if (pattern.rows <= 0) {
+		return {valid: false, context: "Rows must be greater than 0"};
+	}
+	if (pattern.columns <= 0) {
+		return {valid: false, context: "Columns must be greater than 0"};
+	}
+	return {valid: true, context: ""};
 }
