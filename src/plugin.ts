@@ -269,8 +269,8 @@ function drawPattern(board: Board) {
 			// Note: the clone is already a child of the board
 			
 			// apply data
-			clone.x = position.x;
-			clone.y = position.y;
+			clone.x = position.x + board.x;
+			clone.y = position.y + board.y;
 			clone.rotate(position.rot);
 			clone.hidden = false;
 
