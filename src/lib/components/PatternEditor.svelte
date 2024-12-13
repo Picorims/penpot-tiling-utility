@@ -36,6 +36,7 @@
 	<NumberInput id="pattern-rows" label="Rows" min={1} bind:value={pattern.proxy.rows} />
 	<NumberInput id="pattern-columns" label="Columns" min={1} bind:value={pattern.proxy.columns} />
 	{#if pattern.proxy.mode === 'revolution'}
+		<NumberInput id="pattern-radius" label="Radius" min={1} bind:value={pattern.proxy.radius} />
 		<Checkbox
 			id="pattern-type"
 			bind:checked={pattern.proxy.rotateAccordingToDirection}
