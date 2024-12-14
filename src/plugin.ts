@@ -443,7 +443,9 @@ function drawPattern(board: Board) {
 	// apply rules
 	const ruleHandlers: RuleHandler[] = [];
 	for (const rule of pattern.rules) {
-		ruleHandlers.push(RuleHandler.fromRule(rule, pattern.mode));
+		if (rule.enabled){
+			ruleHandlers.push(RuleHandler.fromRule(rule, pattern.mode));
+		}
 	}
 
 	for (let i = 0; i < pattern.rows; i++) {
