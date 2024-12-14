@@ -7,12 +7,31 @@
 */
 
 export interface Pattern_v1 {
+  /**
+   * save version of the pattern
+   */
 	version: 1;
+  /**
+   * define how shapes are placed in the pattern
+   */
 	mode: "revolution" | "grid";
 	rows: number;
 	columns: number;
+  /**
+   * define the minimum distance from the center,
+   * if mode is revolution
+   */
   radius: number;
+  /**
+   * if true, shapes will rotate according to the direction,
+   * if mode is revolution
+   */
   rotateAccordingToDirection: boolean;
+  /**
+   * list of rules to apply to the shapes.
+   * The order of the rules is important.
+   * They are applied in the order they are defined.
+   */
   rules: Rule[];
 }
 
@@ -24,10 +43,10 @@ export interface BaseRule {
 
 export interface RandomRule extends BaseRule {
   type: "randomize";
-  seed: number;
-  property: "x" | "y" | "rotation" | "width" | "height" | "opacity";
+  property: "x" | "y" | "rotation" | "width" | "height";
   from : number;
   to : number;
+  // TODO add seed support?
 }
 
 export type Rule = RandomRule;

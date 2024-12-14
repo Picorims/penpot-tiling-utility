@@ -13,7 +13,7 @@
 // uses the suffix "_IC".
 
 import type { PenpotEvent } from '$lib/types/plugin_events';
-import type { Pattern_v1 } from '$lib/types/pattern';
+import type { Pattern_v1, Rule, RuleKind } from '$lib/types/pattern';
 import type { Board, Shape } from '@penpot/plugin-types';
 
 enum PluginEvents_IC {
@@ -24,14 +24,14 @@ enum PluginEvents_IC {
 	PONG = 'pong',
 	ERROR = 'error',
 	SEND_PATTERN = 'send-pattern',
-	ACKNOWLEDGE_UPDATE_PATTERN = 'acknowledge-update-pattern',
+	ACKNOWLEDGE_UPDATE_PATTERN = 'acknowledge-update-pattern'
 }
 
 enum UIEvents_IC {
 	PING = 'ping',
 	CREATE_PATTERN = 'create-pattern',
 	REQUEST_CURRENT_PATTERN = 'request-current-pattern',
-	UPDATE_PATTERN = 'update-pattern',
+	UPDATE_PATTERN = 'update-pattern'
 }
 
 type EventT = PenpotEvent<PluginEvents_IC | UIEvents_IC>;
@@ -42,17 +42,15 @@ enum PluginDataKey {
 	PATTERN = 'pattern',
 	IS_SOURCE = 'isSource',
 	ROW_INDEX = 'rowIndex',
-	COLUMN_INDEX = 'columnIndex',
+	COLUMN_INDEX = 'columnIndex'
 }
-
-
 
 let selectionCache: string[] = [];
 let lockModifications = false;
 
 penpot.ui.open('Tiling Utility', '', {
 	width: 300,
-	height: 300,
+	height: 300
 });
 
 function getDefaultPattern(): Pattern_v1 {
@@ -63,8 +61,79 @@ function getDefaultPattern(): Pattern_v1 {
 		columns: 5,
 		radius: 50,
 		rotateAccordingToDirection: true,
-		rules: [],
+		rules: []
 	};
+}
+
+/**
+ * This class is responsible for applying rules to a position.
+ * Each call to process will apply the rules to the given position
+ * and return the new position. The memory is used to store the
+ * state of the rules. As such, the order of processing is important.
+ * 
+ * By convention, it should be iterated over rows first, then columns.
+ */
+class RuleHandler {
+	constructor(
+		private memory: Map<string, string>,
+		private transformer: RuleTransformer,
+		private rule: Rule
+	) {}
+
+	static fromRule(rule: Rule): RuleHandler {
+		const transformer = ruleTransformer[rule.type];
+		if (!transformer) {
+			throw new Error(`Unknown rule type: ${rule.type}`);
+		}
+		const memory = ruleMemoryInitializer[rule.type]();
+		return new RuleHandler(memory, transformer, rule);
+	}
+
+	process(shapeInfo: AbstractShapeInfo) {
+		const result = this.transformer(shapeInfo, this.memory, this.rule);
+		this.memory = result.memory;
+		// A transformer should **NEVER** leave the object in an invalid state.
+		fixShapeInfo(result.shapeInfo);
+		return result.shapeInfo;
+	}
+}
+
+type RuleTransformer = (shapeInfo: AbstractShapeInfo, memory: Map<string, string>, rule: Rule) => {shapeInfo: AbstractShapeInfo, memory: Map<string, string>};
+
+/**
+ * Applies a rule to an abstract shape object.
+ */
+const ruleTransformer: Record<RuleKind, RuleTransformer> = {
+	randomize: (shapeInfo, memory, rule) => {
+		const min = Math.min(rule.from, rule.to);
+		const max = Math.max(rule.from, rule.to);
+		const property = rule.property;
+		const random = Math.random();
+		const value = min + random * (max - min);
+		shapeInfo[property] = shapeInfo[property] + value;
+
+		
+
+		return { shapeInfo: shapeInfo, memory };
+	}
+}
+
+
+/**
+ * Prevents the shape from having invalid values.
+ * @param shapeInfo the shape to fix
+ */
+function fixShapeInfo(shapeInfo: AbstractShapeInfo) {
+	shapeInfo.rotation = shapeInfo.rotation % 360;
+	shapeInfo.width = Math.max(0, shapeInfo.width);
+	shapeInfo.height = Math.max(0, shapeInfo.height);
+}
+	
+/**
+ * Initializes the memory for a rule. It can be empty.
+ */
+const ruleMemoryInitializer: Record<RuleKind, () => Map<string, string>> = {
+	randomize: () => new Map<string, string>()
 }
 
 /**
@@ -137,7 +206,7 @@ penpot.on('selectionchange', (selection) => {
  * @returns
  */
 function createPattern() {
-	console.info("Creating pattern");
+	console.info('Creating pattern');
 	const board = penpot.createBoard();
 	board.setPluginData(PluginDataKey.IS_PATTERN, 'true');
 
@@ -147,13 +216,13 @@ function createPattern() {
 		penpot.ui.sendMessage({ type: PluginEvents_IC.ERROR, content: 'No shape selected' });
 		return;
 	}
-	
+
 	const clone = selectedShape?.clone();
 	clone.x = 0;
 	clone.y = 0;
 	clone.hidden = true;
 	clone.blocked = true;
-	clone.name += " (source)";
+	clone.name += ' (source)';
 	clone.setPluginData(PluginDataKey.IS_SOURCE, 'true');
 
 	board.appendChild(clone);
@@ -171,23 +240,28 @@ function createPattern() {
 }
 
 /**
- * 
+ *
  * @param board The board being the container of the pattern
  * @returns the parsed JSON pattern data
  */
 function getBoardPattern(board: Board): Pattern_v1 {
 	if (board.getPluginData(PluginDataKey.IS_PATTERN) !== 'true') {
 		console.error('Board is not a pattern');
-		penpot.ui.sendMessage({ type: PluginEvents_IC.ERROR, content: 'Board is not a pattern, returning default pattern' });
+		penpot.ui.sendMessage({
+			type: PluginEvents_IC.ERROR,
+			content: 'Board is not a pattern, returning default pattern'
+		});
 		return getDefaultPattern();
 	}
 	return JSON.parse(board.getPluginData(PluginDataKey.PATTERN)) as Pattern_v1;
 }
 
-interface Position {
+interface AbstractShapeInfo {
 	x: number;
 	y: number;
-	rot: number;
+	rotation: number;
+	width: number;
+	height: number;
 }
 
 /**
@@ -195,16 +269,16 @@ interface Position {
  * then create or modify all shapes and position them according
  * to the pattern configuration.
  * @param board The board being the container of the pattern
- * @returns 
+ * @returns
  */
 function drawPattern(board: Board) {
 	if (lockModifications) {
-		console.warn("Modifications are locked");
+		console.warn('Modifications are locked');
 		return;
 	}
 	lockModifications = true;
-	
-	console.info("Drawing pattern");
+
+	console.info('Drawing pattern');
 	if (board.getPluginData(PluginDataKey.IS_PATTERN) !== 'true') {
 		console.error('Board is not a pattern');
 		penpot.ui.sendMessage({ type: PluginEvents_IC.ERROR, content: 'Board is not a pattern' });
@@ -213,7 +287,7 @@ function drawPattern(board: Board) {
 	}
 
 	// clear existing shapes
-	
+
 	// we need to know the max column and row index
 	// to know if clones are missing upon data change
 	let maxRowFound = 0;
@@ -223,7 +297,7 @@ function drawPattern(board: Board) {
 		if (shape.getPluginData(PluginDataKey.IS_SOURCE) !== 'true') {
 			const row = shape.getPluginData(PluginDataKey.ROW_INDEX);
 			const col = shape.getPluginData(PluginDataKey.COLUMN_INDEX);
-			console.debug("Checking", row, col);
+			console.debug('Checking', row, col);
 			if (row === undefined || col === undefined) {
 				console.error('Invalid row or column index (initialization was forgotten somewhere)');
 				return;
@@ -232,7 +306,7 @@ function drawPattern(board: Board) {
 			const colInt = parseInt(col);
 			maxColFound = Math.max(maxColFound, colInt);
 			maxRowFound = Math.max(maxRowFound, rowInt);
-			if (rowInt >= getBoardPattern(board).rows || colInt >= getBoardPattern(board).columns) {	
+			if (rowInt >= getBoardPattern(board).rows || colInt >= getBoardPattern(board).columns) {
 				shape.remove();
 				return;
 			}
@@ -244,7 +318,7 @@ function drawPattern(board: Board) {
 	});
 
 	const pattern = getBoardPattern(board);
-	console.debug("Pattern:", pattern);
+	console.debug('Pattern:', pattern);
 	const validity = checkPatternValidity(pattern);
 	if (!validity.valid) {
 		console.error('Invalid pattern:', validity.context);
@@ -256,7 +330,7 @@ function drawPattern(board: Board) {
 	/**
 	 * rows, then columns, then positions
 	 */
-	const positions = new Map<number, Map<number, Position>>();
+	const positions = new Map<number, Map<number, AbstractShapeInfo>>();
 
 	const sourceId = board.getPluginData(PluginDataKey.SOURCE_ID);
 	const source = board.children.find((shape) => shape.id === sourceId);
@@ -267,41 +341,64 @@ function drawPattern(board: Board) {
 		return;
 	}
 
-	board.horizontalSizing = "fix";
-	board.verticalSizing = "fix";
-	
+	board.horizontalSizing = 'fix';
+	board.verticalSizing = 'fix';
+
 	// compute base positions
-	if (pattern.mode === "revolution") {
-		const centerOffset = pattern.radius + (source.height * pattern.rows);
+	if (pattern.mode === 'revolution') {
+		const centerOffset = pattern.radius + source.height * pattern.rows;
 		board.resize(2 * centerOffset, 2 * centerOffset);
-		
+
 		// a row is a circle
 		for (let i = 0; i < pattern.rows; i++) {
 			const r = pattern.radius + i * source.height;
-			const columnPositions = new Map<number, Position>();
+			const columnPositions = new Map<number, AbstractShapeInfo>();
 
 			// a column is a point on the circle
 			for (let j = 0; j < pattern.columns; j++) {
-				const x = r * Math.cos(j * (2 * Math.PI / pattern.columns)) + centerOffset;
-				const y = r * Math.sin(j * (2 * Math.PI / pattern.columns)) + centerOffset;
+				const x = r * Math.cos(j * ((2 * Math.PI) / pattern.columns)) + centerOffset;
+				const y = r * Math.sin(j * ((2 * Math.PI) / pattern.columns)) + centerOffset;
 				const rot = pattern.rotateAccordingToDirection ? j * (360 / pattern.columns) + 90 : 0;
-				columnPositions.set(j, { x, y, rot });
+				columnPositions.set(j, { x, y, rotation: rot, width: source.width, height: source.height });
 			}
 			positions.set(i, columnPositions);
 		}
-	} else if (pattern.mode === "grid") {
+	} else if (pattern.mode === 'grid') {
 		board.resize(source.width * pattern.columns, source.height * pattern.rows);
 		// y axis
 		for (let i = 0; i < pattern.rows; i++) {
-			const columnPositions = new Map<number, Position>();
-			
+			const columnPositions = new Map<number, AbstractShapeInfo>();
+
 			// x axis
 			for (let j = 0; j < pattern.columns; j++) {
 				const x = j * source.width;
 				const y = i * source.height;
-				columnPositions.set(j, { x, y, rot: 0 });
+				columnPositions.set(j, { x, y, rotation: 0, width: source.width, height: source.height });
 			}
 			positions.set(i, columnPositions);
+		}
+	}
+
+	// apply rules
+	const ruleHandlers: RuleHandler[] = [];
+	for (const rule of pattern.rules) {
+		ruleHandlers.push(RuleHandler.fromRule(rule));
+	}
+
+	for (let i = 0; i < pattern.rows; i++) {
+		for (let j = 0; j < pattern.columns; j++) {
+			const position = positions.get(i)?.get(j);
+			if (!position) {
+				console.error('No position found for', i, j);
+				continue;
+			}
+			console.debug('processing at', position);
+
+			let newPosition = position;
+			for (const handler of ruleHandlers) {
+				newPosition = handler.process(newPosition);
+			}
+			positions.get(i)?.set(j, newPosition);
 		}
 	}
 
@@ -313,14 +410,13 @@ function drawPattern(board: Board) {
 				console.error('No position found for', i, j);
 				continue;
 			}
-			console.debug("updating at", position);
+			console.debug('updating at', position);
 
 			let clone: Shape | undefined;
 			if (i > maxRowFound || j > maxColFound || maxRowFound === 0 || maxColFound === 0) {
-				
 				clone = source.clone();
 				clone.setPluginData(PluginDataKey.IS_SOURCE, 'false');
-				clone.name = clone.name.replace(" (source)", ` (${i}, ${j})`);
+				clone.name = clone.name.replace(' (source)', ` (${i}, ${j})`);
 				clone.setPluginData(PluginDataKey.ROW_INDEX, i.toString());
 				clone.setPluginData(PluginDataKey.COLUMN_INDEX, j.toString());
 				// Note: the clone is already a child of the board
@@ -333,13 +429,14 @@ function drawPattern(board: Board) {
 				console.error('No clone found (this is not supposed to happen)');
 				continue;
 			}
-				
+
 			// apply data
 			clone.blocked = false;
 			clone.x = position.x + board.x;
 			clone.y = position.y + board.y;
+			clone.resize(position.width, position.height);
 			clone.rotation = source.rotation;
-			clone.rotate(position.rot);
+			clone.rotate(position.rotation);
 			clone.blocked = true;
 		}
 	}
@@ -351,19 +448,19 @@ function drawPattern(board: Board) {
 /**
  * Says if the pattern is valid or not. Stops at the first invalidity found.
  * @param pattern The pattern to check
- * @returns 
+ * @returns
  */
-function checkPatternValidity (pattern: Pattern_v1): {valid: boolean, context: string} {
-	if (pattern.mode === "revolution") {
+function checkPatternValidity(pattern: Pattern_v1): { valid: boolean; context: string } {
+	if (pattern.mode === 'revolution') {
 		if (pattern.radius <= 0) {
-			return {valid: false, context: "Radius must be greater than 0"};
+			return { valid: false, context: 'Radius must be greater than 0' };
 		}
 	}
 	if (pattern.rows <= 0) {
-		return {valid: false, context: "Rows must be greater than 0"};
+		return { valid: false, context: 'Rows must be greater than 0' };
 	}
 	if (pattern.columns <= 0) {
-		return {valid: false, context: "Columns must be greater than 0"};
+		return { valid: false, context: 'Columns must be greater than 0' };
 	}
-	return {valid: true, context: ""};
+	return { valid: true, context: '' };
 }

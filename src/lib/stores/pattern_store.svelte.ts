@@ -34,7 +34,6 @@ export function getDefaultRule(kind: RuleKind): Rule {
 				id: Math.random().toString(36).substring(7), // TODO use UUID
 				type: 'randomize',
 				enabled: true,
-				seed: 0,
 				property: 'x',
 				from: 0,
 				to: 0

@@ -8,7 +8,7 @@
     */
 
 	import { getDefaultRule, pattern } from '$lib/stores/pattern_store.svelte';
-	import type { Rule, RuleKind } from '$lib/types/pattern';
+	import type { RandomRule, Rule, RuleKind } from '$lib/types/pattern';
 	import Checkbox from './atoms/Checkbox.svelte';
 	import NumberInput from './atoms/NumberInput.svelte';
 
@@ -56,14 +56,13 @@
 	{/each}
 </div>
 
-{#snippet randomizeRule(rule: Rule, i: number)}
+{#snippet randomizeRule(rule: RandomRule, i: number)}
 	<select id={`rule-${i}-property`} class="select" bind:value={rule.property}>
 		<option value="x">X</option>
 		<option value="y">Y</option>
 		<option value="width">Width</option>
 		<option value="height">Height</option>
 		<option value="rotation">Rotation</option>
-		<option value="opacity">Opacity</option>
 	</select>
 	<p>
 		A negative value allow to go below the initial value, while a positive value allows to go above
