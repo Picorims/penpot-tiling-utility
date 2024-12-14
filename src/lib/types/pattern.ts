@@ -41,6 +41,7 @@ export interface BaseRule {
 	id: string;
 	type: string;
 	enabled: boolean;
+  name: string;
 }
 
 export interface RandomRule extends BaseRule {

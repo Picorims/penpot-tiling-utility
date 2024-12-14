@@ -11,6 +11,7 @@
 	import type { OffsetRule, RandomRule, Rule, RuleKind } from '$lib/types/pattern';
 	import Checkbox from './atoms/Checkbox.svelte';
 	import NumberInput from './atoms/NumberInput.svelte';
+	import StringInput from './atoms/StringInput.svelte';
 
 	let selectedRule: RuleKind = $state('randomize');
 
@@ -32,10 +33,12 @@
 		<details class="rule">
 			<summary>
 				<span class="headline-m">{rule.type}</span>
+				<span class="body-m">{rule.name}</span>
 			</summary>
 
 			<div class="details-content">
 				<Checkbox id={`rule-${i}-enabled`} label="Enabled" bind:checked={rule.enabled} />
+				<StringInput id={`rule-${i}-name`} label="Name" regex={new RegExp(/^[-A-Za-z0-9 _]+$/g)} bind:value={rule.name} />
 
 				<button
 					type="button"

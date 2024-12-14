@@ -33,6 +33,7 @@ export function getDefaultRule(kind: RuleKind): Rule {
 			return {
 				id: Math.random().toString(36).substring(7), // TODO use UUID
 				type: 'randomize',
+				name: 'Randomize',
 				enabled: true,
 				property: 'x',
 				from: 0,
@@ -41,6 +42,7 @@ export function getDefaultRule(kind: RuleKind): Rule {
 		case 'offset':
 			return {
 				id: Math.random().toString(36).substring(7), // TODO use UUID
+				name: 'Offset',
 				type: 'offset',
 				enabled: true,
 				property: 'x',
