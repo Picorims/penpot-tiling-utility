@@ -21,6 +21,11 @@
 </script>
 
 <div class="add-rule-container">
+	<p>
+		<strong>Note:</strong> The plugin is currently unable to adjust the frame size based on rules. Disabling
+		clipping might be necessary to see the full pattern. You can also manually resize the frame, although
+		currently this will be overridden every time you apply changes.
+	</p>
 	<select id="pattern-type" class="select" bind:value={selectedRule}>
 		<option value="randomize">Randomize</option>
 		<option value="offset">Offset</option>
@@ -48,8 +53,8 @@
 						pattern.proxy.rules[i] = pattern.proxy.rules[i - 1];
 						pattern.proxy.rules[i - 1] = temp;
 					}}
-					disabled={i === 0}
-				>Move Up</button>
+					disabled={i === 0}>Move Up</button
+				>
 				<button
 					type="button"
 					data-appearance="primary"
@@ -59,8 +64,8 @@
 						pattern.proxy.rules[i] = pattern.proxy.rules[i + 1];
 						pattern.proxy.rules[i + 1] = temp;
 					}}
-					disabled={i === pattern.proxy.rules.length - 1}
-				>Move Down</button>
+					disabled={i === pattern.proxy.rules.length - 1}>Move Down</button
+				>
 				<button
 					type="button"
 					data-appearance="primary"
@@ -73,7 +78,12 @@
 					}}>Remove</button
 				>
 
-				<StringInput id={`rule-${i}-name`} label="Name" regex={new RegExp(/^[-A-Za-z0-9 _]+$/g)} bind:value={rule.name} />
+				<StringInput
+					id={`rule-${i}-name`}
+					label="Name"
+					regex={new RegExp(/^[-A-Za-z0-9 _]+$/g)}
+					bind:value={rule.name}
+				/>
 
 				{#if rule.type === 'randomize'}
 					{@render randomizeRule(rule, i)}
