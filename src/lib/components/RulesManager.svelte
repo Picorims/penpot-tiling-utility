@@ -38,8 +38,29 @@
 
 			<div class="details-content">
 				<Checkbox id={`rule-${i}-enabled`} label="Enabled" bind:checked={rule.enabled} />
-				<StringInput id={`rule-${i}-name`} label="Name" regex={new RegExp(/^[-A-Za-z0-9 _]+$/g)} bind:value={rule.name} />
 
+				<button
+					type="button"
+					data-appearance="primary"
+					onclick={() => {
+						if (i === 0) return;
+						const temp = pattern.proxy.rules[i];
+						pattern.proxy.rules[i] = pattern.proxy.rules[i - 1];
+						pattern.proxy.rules[i - 1] = temp;
+					}}
+					disabled={i === 0}
+				>Move Up</button>
+				<button
+					type="button"
+					data-appearance="primary"
+					onclick={() => {
+						if (i === pattern.proxy.rules.length - 1) return;
+						const temp = pattern.proxy.rules[i];
+						pattern.proxy.rules[i] = pattern.proxy.rules[i + 1];
+						pattern.proxy.rules[i + 1] = temp;
+					}}
+					disabled={i === pattern.proxy.rules.length - 1}
+				>Move Down</button>
 				<button
 					type="button"
 					data-appearance="primary"
@@ -51,6 +72,8 @@
 						}
 					}}>Remove</button
 				>
+
+				<StringInput id={`rule-${i}-name`} label="Name" regex={new RegExp(/^[-A-Za-z0-9 _]+$/g)} bind:value={rule.name} />
 
 				{#if rule.type === 'randomize'}
 					{@render randomizeRule(rule, i)}
