@@ -38,6 +38,15 @@ export function getDefaultRule(kind: RuleKind): Rule {
 				from: 0,
 				to: 0
 			};
+		case 'offset':
+			return {
+				id: Math.random().toString(36).substring(7), // TODO use UUID
+				type: 'offset',
+				enabled: true,
+				property: 'x',
+				offset: 0,
+				accumulate: false
+			};
 		default:
 			throw new Error(`Unknown rule kind: ${kind}`);
 	}

@@ -8,7 +8,7 @@
     */
 
 	import { getDefaultRule, pattern } from '$lib/stores/pattern_store.svelte';
-	import type { RandomRule, Rule, RuleKind } from '$lib/types/pattern';
+	import type { OffsetRule, RandomRule, Rule, RuleKind } from '$lib/types/pattern';
 	import Checkbox from './atoms/Checkbox.svelte';
 	import NumberInput from './atoms/NumberInput.svelte';
 
@@ -22,6 +22,7 @@
 <div class="add-rule-container">
 	<select id="pattern-type" class="select" bind:value={selectedRule}>
 		<option value="randomize">Randomize</option>
+		<option value="offset">Offset</option>
 	</select>
 	<button type="button" data-appearance="primary" onclick={addRule}>Add Rule</button>
 </div>
@@ -50,6 +51,8 @@
 
 				{#if rule.type === 'randomize'}
 					{@render randomizeRule(rule, i)}
+				{:else if rule.type === 'offset'}
+					{@render offsetRule(rule, i)}
 				{/if}
 			</div>
 		</details>
@@ -72,6 +75,27 @@
 	<NumberInput id={`rule-${i}-to`} label="To" bind:value={rule.to} />
 {/snippet}
 
+{#snippet offsetRule(rule: OffsetRule, i: number)}
+	<p>
+		<strong>Note:</strong> This rule currently has no effect on revolution mode.
+	</p>
+	<label for={`rule-${i}-property`}>Property</label>
+	<select id={`rule-${i}-property`} class="select" bind:value={rule.property}>
+		<option value="x">X</option>
+		<option value="y">Y</option>
+	</select>
+	<p>
+		A negative value will move the element to the left or up, while a positive value will move the
+		element to the right or down.
+	</p>
+	<NumberInput id={`rule-${i}-offset`} label="Offset" bind:value={rule.offset} />
+	<p>
+		Accumulation means that all previous offsets are added to the current offset. Disable this
+		option if you want consistent offsets (applied by this rule).
+	</p>
+	<Checkbox id={`rule-${i}-accumulate`} label="Accumulate" bind:checked={rule.accumulate} />
+{/snippet}
+
 <style>
 	div.add-rule-container {
 		display: flex;
@@ -90,8 +114,8 @@
 		}
 	}
 	details.rule > div.details-content {
-        padding-left: var(--spacing-16);
-        padding-top: var(--spacing-8);
-        border-left: 1px solid var(--df-secondary);
+		padding-left: var(--spacing-16);
+		padding-top: var(--spacing-8);
+		border-left: 1px solid var(--df-secondary);
 	}
 </style>

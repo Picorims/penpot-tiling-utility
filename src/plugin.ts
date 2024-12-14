@@ -13,7 +13,7 @@
 // uses the suffix "_IC".
 
 import type { PenpotEvent } from '$lib/types/plugin_events';
-import type { Pattern_v1, Rule, RuleKind } from '$lib/types/pattern';
+import type { GenericRule, Pattern_v1, Rule, RuleKind } from '$lib/types/pattern';
 import type { Board, Shape } from '@penpot/plugin-types';
 
 enum PluginEvents_IC {
@@ -70,27 +70,28 @@ function getDefaultPattern(): Pattern_v1 {
  * Each call to process will apply the rules to the given position
  * and return the new position. The memory is used to store the
  * state of the rules. As such, the order of processing is important.
- * 
+ *
  * By convention, it should be iterated over rows first, then columns.
  */
 class RuleHandler {
 	constructor(
 		private memory: Map<string, string>,
-		private transformer: RuleTransformer,
-		private rule: Rule
+		private transformer: RuleTransformer<RuleKind>,
+		private rule: Rule,
+		private patternMode: Pattern_v1['mode']
 	) {}
 
-	static fromRule(rule: Rule): RuleHandler {
+	static fromRule(rule: Rule, patternMode: Pattern_v1["mode"]): RuleHandler {
 		const transformer = ruleTransformer[rule.type];
 		if (!transformer) {
 			throw new Error(`Unknown rule type: ${rule.type}`);
 		}
 		const memory = ruleMemoryInitializer[rule.type]();
-		return new RuleHandler(memory, transformer, rule);
+		return new RuleHandler(memory, transformer, rule, patternMode);
 	}
 
 	process(shapeInfo: AbstractShapeInfo) {
-		const result = this.transformer(shapeInfo, this.memory, this.rule);
+		const result = this.transformer(shapeInfo, this.memory, this.rule, this.patternMode);
 		this.memory = result.memory;
 		// A transformer should **NEVER** leave the object in an invalid state.
 		fixShapeInfo(result.shapeInfo);
@@ -98,12 +99,17 @@ class RuleHandler {
 	}
 }
 
-type RuleTransformer = (shapeInfo: AbstractShapeInfo, memory: Map<string, string>, rule: Rule) => {shapeInfo: AbstractShapeInfo, memory: Map<string, string>};
+type RuleTransformer<T extends RuleKind> = (
+	shapeInfo: AbstractShapeInfo,
+	memory: Map<string, string>,
+	rule: GenericRule<T>,
+	patternMode: Pattern_v1['mode']
+) => { shapeInfo: AbstractShapeInfo; memory: Map<string, string> };
 
 /**
  * Applies a rule to an abstract shape object.
  */
-const ruleTransformer: Record<RuleKind, RuleTransformer> = {
+const ruleTransformer: {[K in RuleKind]: RuleTransformer<K>} = {
 	randomize: (shapeInfo, memory, rule) => {
 		const min = Math.min(rule.from, rule.to);
 		const max = Math.max(rule.from, rule.to);
@@ -112,12 +118,48 @@ const ruleTransformer: Record<RuleKind, RuleTransformer> = {
 		const value = min + random * (max - min);
 		shapeInfo[property] = shapeInfo[property] + value;
 
-		
-
 		return { shapeInfo: shapeInfo, memory };
-	}
-}
+	},
+	offset: (shapeInfo, memory, rule, patternMode) => {
+		if (patternMode === 'revolution') {
+			console.warn('Offset rule is not supported in revolution mode');
+			return { shapeInfo, memory };
+		}
 
+		const property = rule.property;
+		const offset = rule.offset;
+		const accumulate = rule.accumulate;
+		const row = shapeInfo.row;
+		const col = shapeInfo.column;
+
+		let appliedOffset;
+		let amount;
+		if (property === 'x') {
+			amount = col;
+		} else if (property === 'y') {
+			amount = row;
+		} else {
+			throw new Error(`Unknown offset property: ${property}`);
+		}
+		appliedOffset = amount * offset;
+
+		if (accumulate) {
+			for (let i = 0; i < amount; i++) {
+				appliedOffset += i * offset;
+			}
+		}
+
+		if (property === 'x') {
+			shapeInfo.x += appliedOffset;
+		} else if (property === 'y') {
+			shapeInfo.y += appliedOffset;
+		} else {
+			throw new Error(`Unknown offset property: ${property}`);
+		}
+
+		return { shapeInfo, memory };
+	}
+};
 
 /**
  * Prevents the shape from having invalid values.
@@ -128,13 +170,14 @@ function fixShapeInfo(shapeInfo: AbstractShapeInfo) {
 	shapeInfo.width = Math.max(0, shapeInfo.width);
 	shapeInfo.height = Math.max(0, shapeInfo.height);
 }
-	
+
 /**
  * Initializes the memory for a rule. It can be empty.
  */
 const ruleMemoryInitializer: Record<RuleKind, () => Map<string, string>> = {
-	randomize: () => new Map<string, string>()
-}
+	randomize: () => new Map<string, string>(),
+	offset: () => new Map<string, string>()
+};
 
 /**
  * Handle messages from the UI
@@ -257,6 +300,8 @@ function getBoardPattern(board: Board): Pattern_v1 {
 }
 
 interface AbstractShapeInfo {
+	row: number;
+	column: number;
 	x: number;
 	y: number;
 	rotation: number;
@@ -359,7 +404,15 @@ function drawPattern(board: Board) {
 				const x = r * Math.cos(j * ((2 * Math.PI) / pattern.columns)) + centerOffset;
 				const y = r * Math.sin(j * ((2 * Math.PI) / pattern.columns)) + centerOffset;
 				const rot = pattern.rotateAccordingToDirection ? j * (360 / pattern.columns) + 90 : 0;
-				columnPositions.set(j, { x, y, rotation: rot, width: source.width, height: source.height });
+				columnPositions.set(j, {
+					row: i,
+					column: j,
+					x,
+					y,
+					rotation: rot,
+					width: source.width,
+					height: source.height
+				});
 			}
 			positions.set(i, columnPositions);
 		}
@@ -373,7 +426,15 @@ function drawPattern(board: Board) {
 			for (let j = 0; j < pattern.columns; j++) {
 				const x = j * source.width;
 				const y = i * source.height;
-				columnPositions.set(j, { x, y, rotation: 0, width: source.width, height: source.height });
+				columnPositions.set(j, {
+					row: i,
+					column: j,
+					x,
+					y,
+					rotation: 0,
+					width: source.width,
+					height: source.height
+				});
 			}
 			positions.set(i, columnPositions);
 		}
@@ -382,7 +443,7 @@ function drawPattern(board: Board) {
 	// apply rules
 	const ruleHandlers: RuleHandler[] = [];
 	for (const rule of pattern.rules) {
-		ruleHandlers.push(RuleHandler.fromRule(rule));
+		ruleHandlers.push(RuleHandler.fromRule(rule, pattern.mode));
 	}
 
 	for (let i = 0; i < pattern.rows; i++) {
