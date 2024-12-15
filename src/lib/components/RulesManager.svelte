@@ -81,7 +81,7 @@
 				<StringInput
 					id={`rule-${i}-name`}
 					label="Name"
-					regex={new RegExp(/^[-A-Za-z0-9 _]+$/g)}
+					regex={new RegExp(/^[A-Za-z0-9 _]+$/g)}
 					bind:value={rule.name}
 				/>
 
