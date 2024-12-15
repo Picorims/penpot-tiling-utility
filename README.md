@@ -2,27 +2,27 @@
 
 ## Developing
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+Install dependencies with `npm install`.
 
+For building and launching a development server, do:
 ```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+npm run build:dev
 ```
+Due to building restrictions, hot reloading is **NOT** supported, builds need to be done manually!
 
 ## Building
 
-To create a production version of your app:
+To create a production version of the plugin:
 
 ```bash
-npm run build
+npm run build:prod
 ```
+Upon push on main, the production build of the plugin will be deployed to github pages.
 
 You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
 
 ## Resources
 
 - Penpot plugin styles: https://penpot-plugins-styles.pages.dev/
+- Penpot plugin API: https://penpot-plugins-api-doc.pages.dev/
+- Penpot plugin guidelines: https://help.penpot.app/plugins/
