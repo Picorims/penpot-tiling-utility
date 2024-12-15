@@ -15,6 +15,7 @@ export enum PluginEvents {
   ERROR = 'error',
   SEND_PATTERN = 'send-pattern',
   ACKNOWLEDGE_UPDATE_PATTERN = 'acknowledge-update-pattern',
+  SEND_PROGRESSION = 'send-progression',
 }
 
 export enum UIEvents {

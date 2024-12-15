@@ -1,7 +1,7 @@
 <script lang="ts">
 	import PatternEditor from '$lib/components/PatternEditor.svelte';
 	import { sendMessage } from '$lib/plugin_utils';
-	import { locked, pattern } from '$lib/stores/pattern_store.svelte';
+	import { locked, pattern, progressRatio } from '$lib/stores/pattern_store.svelte';
 	import type { Pattern_v1 } from '$lib/types/pattern';
 	import { PluginEvents, UIEvents, type PenpotEvent } from '$lib/types/plugin_events';
 	/*
@@ -42,6 +42,15 @@
 			pattern.proxy = receivedPattern as Pattern_v1;
 		} else if (e.type === PluginEvents.ACKNOWLEDGE_UPDATE_PATTERN) {
 			locked.value = false;
+			progressRatio.value = 1;
+		} else if (e.type === PluginEvents.PONG) {
+			console.log('pong');
+		} else if (e.type === PluginEvents.SEND_PROGRESSION) {
+			const v = e.content; // TODO cleaner type handling
+			if (!v) {
+				throw new Error('Progression value is missing');
+			}
+			progressRatio.value = (v as {ratio: number}).ratio;
 		} else if (e.type === PluginEvents.ERROR) {
 			console.error('plugin error', e.content);
 		} else {

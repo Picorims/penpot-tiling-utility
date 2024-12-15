@@ -26,6 +26,8 @@ export let pattern = $state<{ proxy: Pattern_v1 }>({
 
 // eslint-disable-next-line prefer-const
 export let locked = $state<{ value: boolean }>({ value: false });
+// eslint-disable-next-line prefer-const
+export let progressRatio = $state<{ value: number }>({ value: 0 });
 
 export function getDefaultRule(kind: RuleKind): Rule {
 	switch (kind) {

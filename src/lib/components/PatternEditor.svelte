@@ -8,9 +8,10 @@
     */
 
 	import { sendMessage } from '$lib/plugin_utils';
-	import { locked, pattern } from '$lib/stores/pattern_store.svelte';
+	import { locked, pattern, progressRatio } from '$lib/stores/pattern_store.svelte';
 	import { UIEvents } from '$lib/types/plugin_events';
 	import Checkbox from './atoms/Checkbox.svelte';
+	import InfoBlock from './atoms/InfoBlock.svelte';
 	import NumberInput from './atoms/NumberInput.svelte';
 	import RulesManager from './RulesManager.svelte';
 
@@ -45,6 +46,13 @@
 	<NumberInput id="pattern-rows" label="Rows" min={1} bind:value={pattern.proxy.rows} />
 	<NumberInput id="pattern-columns" label="Columns" min={1} bind:value={pattern.proxy.columns} />
 
+	{#if pattern.proxy.rows * pattern.proxy.columns > 200}
+		<InfoBlock
+			variant="warning"
+			message={`The pattern has ${pattern.proxy.rows * pattern.proxy.columns} items, it may slow down the plugin and Penpot.`}
+		/>
+	{/if}
+
 	{#if pattern.proxy.mode === 'revolution'}
 		<NumberInput id="pattern-radius" label="Radius" min={1} bind:value={pattern.proxy.radius} />
 		<Checkbox
@@ -57,11 +65,11 @@
 	<h2 class="title-m">Rules</h2>
 	<RulesManager />
 
-	<hr>
+	<hr />
 
 	<button type="submit" data-appearance="primary" disabled={locked.value}>Apply</button>
 	{#if locked.value}
-		<p>Loading...</p>
+		<p>Loading... {Math.floor(progressRatio.value * 100)}%</p>
 	{/if}
 </form>
 
@@ -82,9 +90,7 @@
 		color: var(--da-quaternary);
 	}
 
-	:global(p,
-	button,
-	select) {
+	:global(p, button, select) {
 		margin-bottom: var(--spacing-16);
 	}
 

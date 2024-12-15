@@ -16,6 +16,8 @@ import type { PenpotEvent } from '$lib/types/plugin_events';
 import type { GenericRule, Pattern_v1, Rule, RuleKind } from '$lib/types/pattern';
 import type { Board, Shape } from '@penpot/plugin-types';
 
+const VERBOSE = false;
+
 enum PluginEvents_IC {
 	NO_SELECTION = 'no-selection',
 	ONE_SELECTION = 'one-selection',
@@ -24,7 +26,8 @@ enum PluginEvents_IC {
 	PONG = 'pong',
 	ERROR = 'error',
 	SEND_PATTERN = 'send-pattern',
-	ACKNOWLEDGE_UPDATE_PATTERN = 'acknowledge-update-pattern'
+	ACKNOWLEDGE_UPDATE_PATTERN = 'acknowledge-update-pattern',
+	SEND_PROGRESSION = 'send-progression'
 }
 
 enum UIEvents_IC {
@@ -81,7 +84,7 @@ class RuleHandler {
 		private patternMode: Pattern_v1['mode']
 	) {}
 
-	static fromRule(rule: Rule, patternMode: Pattern_v1["mode"]): RuleHandler {
+	static fromRule(rule: Rule, patternMode: Pattern_v1['mode']): RuleHandler {
 		const transformer = ruleTransformer[rule.type];
 		if (!transformer) {
 			throw new Error(`Unknown rule type: ${rule.type}`);
@@ -109,7 +112,7 @@ type RuleTransformer<T extends RuleKind> = (
 /**
  * Applies a rule to an abstract shape object.
  */
-const ruleTransformer: {[K in RuleKind]: RuleTransformer<K>} = {
+const ruleTransformer: { [K in RuleKind]: RuleTransformer<K> } = {
 	randomize: (shapeInfo, memory, rule) => {
 		const min = Math.min(rule.from, rule.to);
 		const max = Math.max(rule.from, rule.to);
@@ -183,7 +186,7 @@ const ruleMemoryInitializer: Record<RuleKind, () => Map<string, string>> = {
  * Handle messages from the UI
  */
 penpot.ui.onMessage<EventT>((message) => {
-	console.log(message);
+	console.log('received UI message', message);
 	if (message.type === UIEvents_IC.PING) {
 		penpot.ui.sendMessage(PluginEvents_IC.PONG);
 	} else if (message.type === UIEvents_IC.CREATE_PATTERN) {
@@ -342,7 +345,7 @@ function drawPattern(board: Board) {
 		if (shape.getPluginData(PluginDataKey.IS_SOURCE) !== 'true') {
 			const row = shape.getPluginData(PluginDataKey.ROW_INDEX);
 			const col = shape.getPluginData(PluginDataKey.COLUMN_INDEX);
-			console.debug('Checking', row, col);
+			if (VERBOSE) console.debug('Checking', row, col);
 			if (row === undefined || col === undefined) {
 				console.error('Invalid row or column index (initialization was forgotten somewhere)');
 				return;
@@ -443,7 +446,7 @@ function drawPattern(board: Board) {
 	// apply rules
 	const ruleHandlers: RuleHandler[] = [];
 	for (const rule of pattern.rules) {
-		if (rule.enabled){
+		if (rule.enabled) {
 			ruleHandlers.push(RuleHandler.fromRule(rule, pattern.mode));
 		}
 	}
@@ -455,7 +458,7 @@ function drawPattern(board: Board) {
 				console.error('No position found for', i, j);
 				continue;
 			}
-			console.debug('processing at', position);
+			if (VERBOSE) console.debug('processing at', position);
 
 			let newPosition = position;
 			for (const handler of ruleHandlers) {
@@ -468,12 +471,16 @@ function drawPattern(board: Board) {
 	// create shapes
 	for (let i = 0; i < pattern.rows; i++) {
 		for (let j = 0; j < pattern.columns; j++) {
+			penpot.ui.sendMessage({
+				type: PluginEvents_IC.SEND_PROGRESSION,
+				content: { ratio: i / pattern.rows + (1 / pattern.rows / pattern.columns) * j }
+			});
 			const position = positions.get(i)?.get(j);
 			if (!position) {
 				console.error('No position found for', i, j);
 				continue;
 			}
-			console.debug('updating at', position);
+			if (VERBOSE) console.debug('updating at', position);
 
 			let clone: Shape | undefined;
 			if (i > maxRowFound || j > maxColFound || maxRowFound === 0 || maxColFound === 0) {
