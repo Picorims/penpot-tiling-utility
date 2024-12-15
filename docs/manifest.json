@@ -1,0 +1,7 @@
+{
+	"name": "Tiling Utility",
+	"description": "A Penpot plugin to create tiling patterns (revolution, grid) inspired from Inkscape tiling path effects.",
+	"code": "./plugin.js",
+	"icon": "./icon.png",
+	"permissions": ["content:read", "content:write"]
+}
