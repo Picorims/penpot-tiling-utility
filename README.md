@@ -1,5 +1,7 @@
 # Tiling Utility - PenPot Plugin
 
+**Note:** The project is in code freeze from December 15th 2024 to late January 2025.
+
 ## Developing
 
 Install dependencies with `npm install`.
