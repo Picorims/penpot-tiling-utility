@@ -238,6 +238,7 @@ penpot.on('selectionchange', (selection) => {
 		const isPattern = shape.getPluginData(PluginDataKey.IS_PATTERN) === 'true';
 		if (isPattern) {
 			penpot.ui.sendMessage({ type: PluginEvents_IC.PATTERN_SELECTED });
+			penpot.ui.sendMessage({ type: PluginEvents_IC.SEND_PATTERN, content: getBoardPattern(shape as Board) });
 		} else {
 			penpot.ui.sendMessage({ type: PluginEvents_IC.ONE_SELECTION });
 		}
