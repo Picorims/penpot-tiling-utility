@@ -22,8 +22,7 @@ To create a production version of the plugin:
 npm run build:prod
 ```
 
-Upon push on main, the production build of the plugin will be deployed to github pages.
-
+Upon push on main, the production build of the plugin will be deployed to Netlify.
 You can preview the production build with `npm run preview`.
 
 ## Resources

@@ -47,15 +47,5 @@ if (process.argv.length !== 3) {
 		console.warn('Post build script failed to find plugin code.');
 	}
 
-	// for production, we need to adjust the manifest.json file.
-	if (process.argv[2] === 'production') {
-		console.log('Adjusting manifest.json file.');
-		const manifestPath = path.resolve(basePath + '/manifest.json');
-		const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
-		manifest.code = "./penpot-tiling-utility/plugin.js";
-		manifest.icon = "./penpot-tiling-utility/icon.png";
-		fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
-	}
-
 	console.log('Post build script finished.');
 }
