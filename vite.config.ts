@@ -13,7 +13,7 @@ export default defineConfig({
 		rollupOptions: {
 			input: {
 				plugin: 'src/plugin.ts' // makes the corresponding chunk available.
-			},
+			}
 		}
 	}
 });

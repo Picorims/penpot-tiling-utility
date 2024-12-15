@@ -50,7 +50,7 @@
 			if (!v) {
 				throw new Error('Progression value is missing');
 			}
-			progressRatio.value = (v as {ratio: number}).ratio;
+			progressRatio.value = (v as { ratio: number }).ratio;
 		} else if (e.type === PluginEvents.ERROR) {
 			console.error('plugin error', e.content);
 		} else {

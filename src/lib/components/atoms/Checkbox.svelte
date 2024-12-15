@@ -20,7 +20,7 @@
 </div>
 
 <style>
-    .checkbox-container {
-        margin-bottom: var(--spacing-16);
-    }
+	.checkbox-container {
+		margin-bottom: var(--spacing-16);
+	}
 </style>

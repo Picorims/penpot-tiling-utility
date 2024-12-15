@@ -6,8 +6,8 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-import type { PenpotEvent, UIEvents } from "./types/plugin_events";
+import type { PenpotEvent, UIEvents } from './types/plugin_events';
 
 export function sendMessage(msg: PenpotEvent<UIEvents>) {
-    parent.postMessage(msg, '*');
+	parent.postMessage(msg, '*');
 }

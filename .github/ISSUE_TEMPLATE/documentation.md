@@ -1,10 +1,7 @@
 ---
 name: Documentation
 about: For documentation or user information.
-title: "[DOC]"
+title: '[DOC]'
 labels: documentation
 assignees: Picorims
-
 ---
-
-

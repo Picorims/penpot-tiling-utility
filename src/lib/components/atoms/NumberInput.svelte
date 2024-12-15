@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { error } from "@sveltejs/kit";
+	import { error } from '@sveltejs/kit';
 
 	/*
       Copyright (c) 2024 Charly Schmidt aka Picorims<picorims.contact@gmail.com>,
@@ -25,31 +25,31 @@
 		step?: number;
 	} = $props();
 
-    let invalidBounds = $state(false);
+	let invalidBounds = $state(false);
 
-    function checkBounds() {
-        invalidBounds = false;
-        if (min && value < min) {
-            invalidBounds = true;
-        }
-        if (max && value > max) {
-            invalidBounds = true;
-        }
-    }
+	function checkBounds() {
+		invalidBounds = false;
+		if (min && value < min) {
+			invalidBounds = true;
+		}
+		if (max && value > max) {
+			invalidBounds = true;
+		}
+	}
 </script>
 
 <div class="input-container">
 	<label class="input-label" for={id}>{label}</label>
 	<input
 		class="input"
-        class:error={invalidBounds}
+		class:error={invalidBounds}
 		type="number"
 		{id}
 		{min}
 		{max}
 		{step}
 		bind:value
-        oninput={checkBounds}
+		oninput={checkBounds}
 	/>
 </div>
 
@@ -58,7 +58,7 @@
 		margin-bottom: var(--spacing-16);
 	}
 
-    label.input-label {
+	label.input-label {
 		display: block;
 		margin-bottom: var(--spacing-4);
 		color: var(--df-secondary);

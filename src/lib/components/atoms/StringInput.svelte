@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { error } from "@sveltejs/kit";
+	import { error } from '@sveltejs/kit';
 
 	/*
       Copyright (c) 2024 Charly Schmidt aka Picorims<picorims.contact@gmail.com>,
@@ -21,14 +21,15 @@
 		regex?: RegExp;
 	} = $props();
 
-    let invalidBounds = $state(false);
+	let invalidBounds = $state(false);
 
-    function checkBounds() {
+	function checkBounds() {
 		if (!regex) {
 			invalidBounds = false;
 			return;
 		}
-		if (value === null) { // TODO refactor if optional strings should be supported
+		if (value === null) {
+			// TODO refactor if optional strings should be supported
 			invalidBounds = true;
 			return;
 		}
@@ -38,19 +39,19 @@
 		} else {
 			invalidBounds = false;
 		}
-    }
+	}
 </script>
 
 <div class="input-container">
 	<label class="input-label" for={id}>{label}</label>
 	<input
 		class="input"
-        class:error={invalidBounds}
+		class:error={invalidBounds}
 		type="text"
 		{id}
 		pattern={regex?.source}
 		bind:value
-        oninput={checkBounds}
+		oninput={checkBounds}
 	/>
 </div>
 
@@ -59,7 +60,7 @@
 		margin-bottom: var(--spacing-16);
 	}
 
-    label.input-label {
+	label.input-label {
 		display: block;
 		margin-bottom: var(--spacing-4);
 		color: var(--df-secondary);

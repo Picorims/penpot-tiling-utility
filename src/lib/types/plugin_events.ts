@@ -11,18 +11,18 @@ export enum PluginEvents {
 	ONE_SELECTION = 'one-selection',
 	MULTIPLE_SELECTION = 'multiple-selection',
 	PATTERN_SELECTED = 'pattern-selected',
-  PONG = 'pong',
-  ERROR = 'error',
-  SEND_PATTERN = 'send-pattern',
-  ACKNOWLEDGE_UPDATE_PATTERN = 'acknowledge-update-pattern',
-  SEND_PROGRESSION = 'send-progression',
+	PONG = 'pong',
+	ERROR = 'error',
+	SEND_PATTERN = 'send-pattern',
+	ACKNOWLEDGE_UPDATE_PATTERN = 'acknowledge-update-pattern',
+	SEND_PROGRESSION = 'send-progression'
 }
 
 export enum UIEvents {
-  PING = 'ping',
+	PING = 'ping',
 	CREATE_PATTERN = 'create-pattern',
-  REQUEST_CURRENT_PATTERN = 'request-current-pattern',
-  UPDATE_PATTERN = 'update-pattern',
+	REQUEST_CURRENT_PATTERN = 'request-current-pattern',
+	UPDATE_PATTERN = 'update-pattern'
 }
 
 /**
@@ -30,8 +30,8 @@ export enum UIEvents {
  * here and in plugin (copies).
  */
 export interface PenpotEvent<T extends string> {
-  type: T;
-  content?: object;
+	type: T;
+	content?: object;
 }
 
 // TODO use conditional types for stronger typing of events
