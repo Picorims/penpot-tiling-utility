@@ -238,7 +238,10 @@ penpot.on('selectionchange', (selection) => {
 		const isPattern = shape.getPluginData(PluginDataKey.IS_PATTERN) === 'true';
 		if (isPattern) {
 			penpot.ui.sendMessage({ type: PluginEvents_IC.PATTERN_SELECTED });
-			penpot.ui.sendMessage({ type: PluginEvents_IC.SEND_PATTERN, content: getBoardPattern(shape as Board) });
+			penpot.ui.sendMessage({
+				type: PluginEvents_IC.SEND_PATTERN,
+				content: getBoardPattern(shape as Board)
+			});
 		} else {
 			penpot.ui.sendMessage({ type: PluginEvents_IC.ONE_SELECTION });
 		}
@@ -337,32 +340,15 @@ function drawPattern(board: Board) {
 
 	// clear existing shapes
 
-	// we need to know the max column and row index
-	// to know if clones are missing upon data change
-	let maxRowFound = 0;
-	let maxColFound = 0;
-	const shapeCache = new Map<number, Map<number, Shape>>();
+	// Positioning seems to be based on the frame (aligned with the axes)
+	// encapsulating the rotated element, based on the rotation of the previous draw.
+	// This is hard to compensate, so clone caching is not done for now.
+	// No significant performance gain was noticed with caching at the time
+	// of the implementation causing issues.
+
 	board.children.forEach((shape) => {
 		if (shape.getPluginData(PluginDataKey.IS_SOURCE) !== 'true') {
-			const row = shape.getPluginData(PluginDataKey.ROW_INDEX);
-			const col = shape.getPluginData(PluginDataKey.COLUMN_INDEX);
-			if (VERBOSE) console.debug('Checking', row, col);
-			if (row === undefined || col === undefined) {
-				console.error('Invalid row or column index (initialization was forgotten somewhere)');
-				return;
-			}
-			const rowInt = parseInt(row);
-			const colInt = parseInt(col);
-			maxColFound = Math.max(maxColFound, colInt);
-			maxRowFound = Math.max(maxRowFound, rowInt);
-			if (rowInt >= getBoardPattern(board).rows || colInt >= getBoardPattern(board).columns) {
-				shape.remove();
-				return;
-			}
-			if (!shapeCache.has(rowInt)) {
-				shapeCache.set(rowInt, new Map<number, Shape>());
-			}
-			shapeCache.get(rowInt)?.set(colInt, shape);
+			shape.remove();
 		}
 	});
 
@@ -407,7 +393,9 @@ function drawPattern(board: Board) {
 			for (let j = 0; j < pattern.columns; j++) {
 				const x = r * Math.cos(j * ((2 * Math.PI) / pattern.columns)) + centerOffset;
 				const y = r * Math.sin(j * ((2 * Math.PI) / pattern.columns)) + centerOffset;
-				const rot = pattern.rotateAccordingToDirection ? j * (360 / pattern.columns) + 90 : 0;
+				const rot = pattern.rotateAccordingToDirection
+					? j * (360 / pattern.columns) + 90 // +90 because the revolution starts at 3 o'clock
+					: 0;
 				columnPositions.set(j, {
 					row: i,
 					column: j,
@@ -483,18 +471,13 @@ function drawPattern(board: Board) {
 			}
 			if (VERBOSE) console.debug('updating at', position);
 
-			let clone: Shape | undefined;
-			if (i > maxRowFound || j > maxColFound || maxRowFound === 0 || maxColFound === 0) {
-				clone = source.clone();
-				clone.setPluginData(PluginDataKey.IS_SOURCE, 'false');
-				clone.name = clone.name.replace(' (source)', ` (${i}, ${j})`);
-				clone.setPluginData(PluginDataKey.ROW_INDEX, i.toString());
-				clone.setPluginData(PluginDataKey.COLUMN_INDEX, j.toString());
-				// Note: the clone is already a child of the board
-				clone.hidden = false;
-			} else {
-				clone = shapeCache.get(i)?.get(j);
-			}
+			const clone: Shape | undefined = source.clone();
+			clone.setPluginData(PluginDataKey.IS_SOURCE, 'false');
+			clone.name = clone.name.replace(' (source)', ` (${i}, ${j})`);
+			clone.setPluginData(PluginDataKey.ROW_INDEX, i.toString());
+			clone.setPluginData(PluginDataKey.COLUMN_INDEX, j.toString());
+			// Note: the clone is already a child of the board
+			clone.hidden = false;
 
 			if (!clone) {
 				console.error('No clone found (this is not supposed to happen)');
@@ -503,11 +486,19 @@ function drawPattern(board: Board) {
 
 			// apply data
 			clone.blocked = false;
-			clone.x = position.x + board.x;
-			clone.y = position.y + board.y;
 			clone.resize(position.width, position.height);
+			if (pattern.mode === 'revolution') {
+				clone.x = position.x - position.width / 2 + board.x;
+				clone.y = position.y - position.height / 2 + board.y;
+			} else if (pattern.mode === 'grid') {
+				clone.x = position.x + board.x;
+				clone.y = position.y + board.y;
+			}
 			clone.rotation = source.rotation;
-			clone.rotate(position.rotation);
+			clone.rotate(position.rotation, {
+				x: clone.x + clone.width / 2,
+				y: clone.y + clone.height / 2
+			});
 			clone.blocked = true;
 		}
 	}
